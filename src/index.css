@@ -2,95 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 220 13% 18%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 13% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 13% 18%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 13% 18%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 13% 18%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.375rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Exam-specific colors */
+    --exam-header: 221 83% 25%;
+    --exam-header-foreground: 0 0% 100%;
+    
+    --question-not-visited: 220 9% 75%;
+    --question-visited: 199 89% 48%;
+    --question-answered: 142 71% 45%;
+    --question-marked: 25 95% 53%;
+    --question-marked-answered: 271 81% 56%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --panel-bg: 220 14% 97%;
+    --panel-border: 220 13% 91%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --timer-bg: 0 84% 60%;
+    --timer-foreground: 0 0% 100%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --success: 142 71% 45%;
+    --warning: 25 95% 53%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 220 13% 18%;
+    --foreground: 0 0% 100%;
   }
 }
 
@@ -99,7 +67,103 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Prevent text selection in exam mode */
+  .exam-mode {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+}
+
+@layer components {
+  .exam-header {
+    @apply bg-exam-header text-exam-header-foreground;
+  }
+
+  .exam-panel {
+    @apply bg-panel-bg border border-panel-border rounded-md;
+  }
+
+  .question-btn {
+    @apply w-10 h-10 rounded-md font-medium text-sm flex items-center justify-center transition-all duration-200 cursor-pointer border-2;
+  }
+
+  .question-btn-not-visited {
+    @apply bg-question-not-visited text-white border-transparent;
+  }
+
+  .question-btn-visited {
+    @apply bg-question-visited text-white border-transparent;
+  }
+
+  .question-btn-answered {
+    @apply bg-question-answered text-white border-transparent;
+  }
+
+  .question-btn-marked {
+    @apply bg-question-marked text-white border-transparent;
+  }
+
+  .question-btn-marked-answered {
+    @apply bg-question-marked-answered text-white border-transparent;
+  }
+
+  .question-btn-current {
+    @apply ring-2 ring-offset-2 ring-primary;
+  }
+
+  .exam-action-btn {
+    @apply px-4 py-2 rounded font-medium text-sm transition-colors duration-200;
+  }
+
+  .exam-action-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  .exam-action-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border;
+  }
+
+  .exam-action-warning {
+    @apply bg-warning text-white hover:bg-warning/90;
+  }
+
+  .exam-action-success {
+    @apply bg-success text-white hover:bg-success/90;
+  }
+
+  .option-radio {
+    @apply w-5 h-5 border-2 border-primary rounded-full flex items-center justify-center cursor-pointer transition-all duration-200;
+  }
+
+  .option-radio-selected {
+    @apply bg-primary;
+  }
+
+  .option-radio-selected::after {
+    content: '';
+    @apply w-2 h-2 bg-white rounded-full;
+  }
+
+  .subject-tab {
+    @apply px-6 py-3 font-medium text-sm transition-all duration-200 border-b-2;
+  }
+
+  .subject-tab-active {
+    @apply text-primary border-primary bg-white;
+  }
+
+  .subject-tab-inactive {
+    @apply text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/50;
   }
 }
