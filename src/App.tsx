@@ -7,6 +7,7 @@ import { Provider } from "react-redux";
 import { store } from "@/store";
 import LoginPage from "./pages/LoginPage";
 import InstructionsPage from "./pages/InstructionsPage";
+import ProctoringSetupPage from "./pages/ProctoringSetupPage";
 import ExamPage from "./pages/ExamPage";
 import SummaryPage from "./pages/SummaryPage";
 import NotFound from "./pages/NotFound";
@@ -23,11 +24,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/instructions" element={<InstructionsPage />} />
+            <Route path="/proctoring-setup" element={<ProctoringSetupPage />} />
             <Route path="/exam" element={<ExamPage />} />
             <Route path="/summary" element={<SummaryPage />} />
-            {/* Redirect /login to root */}
             <Route path="/login" element={<Navigate to="/" replace />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

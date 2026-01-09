@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/hooks/useAppDispatch';
 import { useExamTimer } from '@/hooks/useExamTimer';
 import { useExamSafety } from '@/hooks/useExamSafety';
+import { useTabDetection } from '@/hooks/useTabDetection';
+import { useNoiseDetection } from '@/hooks/useNoiseDetection';
+import { startExam } from '@/store/examSlice';
 import {
   setCurrentSubject,
   setCurrentQuestion,
@@ -22,15 +25,44 @@ import { QuestionPanel } from '@/components/exam/QuestionPanel';
 import { QuestionGrid } from '@/components/exam/QuestionGrid';
 import { ActionButtons } from '@/components/exam/ActionButtons';
 import { SubmitModal } from '@/components/exam/SubmitModal';
+import { LiveIndicators } from '@/components/proctoring/LiveIndicators';
+import { CameraPreview } from '@/components/proctoring/CameraPreview';
+import { WarningModal } from '@/components/proctoring/WarningModal';
 
 const ExamPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { isAuthenticated, hasReadInstructions, user } = useAppSelector((state) => state.auth);
   const examState = useAppSelector((state) => state.exam);
+  const { setupCompleted, microphoneStream } = useAppSelector((state) => state.proctoring);
   const { formattedTime, timeRemaining, isSubmitted } = useExamTimer();
   
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+
+  // Enable proctoring features
+  useTabDetection(!isSubmitted && hasReadInstructions);
+  useNoiseDetection(null, !isSubmitted && hasReadInstructions);
+
+  // Start exam when entering page
+  useEffect(() => {
+    if (setupCompleted && !examState.startTime) {
+      dispatch(startExam());
+    }
+  }, [setupCompleted, examState.startTime, dispatch]);
+
+  // Get camera stream
+  useEffect(() => {
+    const getCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setCameraStream(stream);
+      } catch (e) {
+        console.log('Camera not available');
+      }
+    };
+    if (setupCompleted) getCamera();
+  }, [setupCompleted]);
 
   // Enable exam safety features
   useExamSafety(!isSubmitted && hasReadInstructions);
@@ -49,6 +81,10 @@ const ExamPage = () => {
 
   if (!hasReadInstructions) {
     return <Navigate to="/instructions" replace />;
+  }
+
+  if (!setupCompleted) {
+    return <Navigate to="/proctoring-setup" replace />;
   }
 
   const currentSubject = examState.currentSubject;
@@ -204,6 +240,11 @@ const ExamPage = () => {
         onConfirm={confirmSubmit}
         stats={calculateStats()}
       />
+
+      {/* Proctoring Components */}
+      <LiveIndicators />
+      <CameraPreview stream={cameraStream} />
+      <WarningModal />
     </div>
   );
 };

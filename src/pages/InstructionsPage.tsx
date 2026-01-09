@@ -21,8 +21,7 @@ const InstructionsPage = () => {
   const handleStartExam = () => {
     if (!agreed) return;
     dispatch(setHasReadInstructions(true));
-    dispatch(startExam());
-    navigate('/exam');
+    navigate('/proctoring-setup');
   };
 
   const formatDuration = (seconds: number) => {
