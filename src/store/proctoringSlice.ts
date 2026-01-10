@@ -1,11 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { ProctoringState, ProctoringWarning } from '@/types/proctoring';
 
+// Define strict proctoring limits
+const LIMITS = {
+  TOTAL_WARNINGS: 20,
+  NOISE: 10,
+  FACE_OFF: 5,
+  TAB_SWITCH: 5,
+};
 
-// Define a local interface extension if your types file isn't updated yet
 interface ExtendedProctoringState extends ProctoringState {
   faceOffCount: number;
   noiseDetectedCount: number;
+  isAutoSubmitted: boolean; // Flag to trigger auto-submission in the UI
 }
 
 const initialState: ExtendedProctoringState = {
@@ -27,11 +34,11 @@ const initialState: ExtendedProctoringState = {
   warnings: [],
   warningCount: 0,
   tabSwitchCount: 0,
-  // 🚀 New counters for LiveIndicators
   faceOffCount: 0,
   noiseDetectedCount: 0,
   activeWarningModal: null,
   privacyConsent: false,
+  isAutoSubmitted: false, // Initialized as false
 };
 
 const proctoringSlice = createSlice({
@@ -75,7 +82,7 @@ const proctoringSlice = createSlice({
       state.isNoisy = action.payload > state.noiseThreshold;
     },
     
-    // 🚨 Centralized Warning Logic
+    // 🚨 Centralized Warning Logic with Auto-Submit Check
     addWarning: (state, action: PayloadAction<Omit<ProctoringWarning, 'id' | 'timestamp'>>) => {
       const newWarning = {
         ...action.payload,
@@ -87,7 +94,7 @@ const proctoringSlice = createSlice({
       state.warningCount++;
       state.activeWarningModal = newWarning;
 
-      // 📊 Increment specific counters based on type for LiveIndicators
+      // 📊 Increment specific counters
       switch (action.payload.type) {
         case 'noise_violation' as any:
           state.noiseDetectedCount++;
@@ -99,6 +106,16 @@ const proctoringSlice = createSlice({
         case 'tab_switch' as any:
           state.tabSwitchCount++;
           break;
+      }
+
+      // 🛑 Auto-Submit Logic
+      if (
+        state.warningCount >= LIMITS.TOTAL_WARNINGS ||
+        state.noiseDetectedCount >= LIMITS.NOISE ||
+        state.faceOffCount >= LIMITS.FACE_OFF ||
+        state.tabSwitchCount >= LIMITS.TAB_SWITCH
+      ) {
+        state.isAutoSubmitted = true;
       }
     },
 
@@ -130,7 +147,6 @@ export const {
   resetProctoring,
 } = proctoringSlice.actions;
 
-// Alias for simpler component usage
 export const showWarningModal = addWarning;
 
 export default proctoringSlice.reducer;

@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks/useAppDispatch";
 import { useExamTimer } from "@/hooks/useExamTimer";
 import { useExamSafety } from "@/hooks/useExamSafety";
 import { useTabDetection } from "@/hooks/useTabDetection";
 import { useNoiseDetection } from "@/hooks/useNoiseDetection";
+import { toast } from "sonner"; 
 import { 
   startExam, 
   setCurrentSubject, 
@@ -17,7 +18,6 @@ import {
   submitExam 
 } from "@/store/examSlice";
 import { allQuestions } from "@/data/questions";
-import { Subject } from "@/types/exam";
 
 // Components
 import { ExamHeader } from "@/components/exam/ExamHeader";
@@ -29,29 +29,40 @@ import { SubmitModal } from "@/components/exam/SubmitModal";
 import { LiveIndicators } from "@/components/proctoring/LiveIndicators";
 import { CameraPreview } from "@/components/proctoring/CameraPreview";
 import { WarningModal } from "@/components/proctoring/WarningModal";
+import { TerminationModal } from "@/components/proctoring/TerminationModal";
 
 const ExamPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  
   const { isAuthenticated, hasReadInstructions, user } = useAppSelector((state) => state.auth);
+  const { setupCompleted, isAutoSubmitted } = useAppSelector((state) => state.proctoring);
   const examState = useAppSelector((state) => state.exam);
-  const { setupCompleted } = useAppSelector((state) => state.proctoring);
   const { formattedTime, timeRemaining, isSubmitted } = useExamTimer();
 
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [micStream, setMicStream] = useState<MediaStream | null>(null);
 
-  // 1. Tab Detection
-  useTabDetection(!isSubmitted && hasReadInstructions);
+  /* =====================================================
+      🚨 AUTO-SUBMIT LOGIC
+  ===================================================== */
+  useEffect(() => {
+    if (isAutoSubmitted) {
+      // Secure the data immediately in the background
+      dispatch(submitExam());
+    }
+  }, [isAutoSubmitted, dispatch]);
+
+  /* =====================================================
+      Proctoring Hooks & Streams
+  ===================================================== */
+  const isTrackingActive = !isSubmitted && hasReadInstructions && !isAutoSubmitted;
   
-  // 2. Noise Detection (Using internal state or Redux stream)
-  useNoiseDetection(micStream, !isSubmitted && hasReadInstructions);
+  useTabDetection(isTrackingActive);
+  useNoiseDetection(micStream, isTrackingActive);
+  useExamSafety(isTrackingActive);
 
-  // 3. Exam Safety (Right click, Copy-Paste, etc)
-  useExamSafety(!isSubmitted && hasReadInstructions);
-
-  // Initialize Streams
   useEffect(() => {
     const initProctoring = async () => {
       try {
@@ -60,21 +71,23 @@ const ExamPage = () => {
         setCameraStream(cStream);
         setMicStream(mStream);
       } catch (e) {
-        console.error("Proctoring streams failed", e);
+        toast.error("Proctoring Hardware Error", { description: "Hardware access lost." });
       }
     };
     if (setupCompleted) initProctoring();
+    return () => {
+      cameraStream?.getTracks().forEach(t => t.stop());
+      micStream?.getTracks().forEach(t => t.stop());
+    };
   }, [setupCompleted]);
 
   useEffect(() => {
-    if (setupCompleted && !examState.startTime) {
-      dispatch(startExam());
-    }
+    if (setupCompleted && !examState.startTime) dispatch(startExam());
   }, [setupCompleted, examState.startTime, dispatch]);
 
   useEffect(() => {
-    if (isSubmitted) navigate("/summary", { replace: true });
-  }, [isSubmitted, navigate]);
+    if (isSubmitted && !isAutoSubmitted) navigate("/summary", { replace: true });
+  }, [isSubmitted, isAutoSubmitted, navigate]);
 
   if (!isAuthenticated) return <Navigate to="/" replace />;
   if (!hasReadInstructions) return <Navigate to="/instructions" replace />;
@@ -95,13 +108,21 @@ const ExamPage = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-panel-bg exam-mode overflow-hidden">
-      <ExamHeader examName="JEE Main 2024" formattedTime={formattedTime} isTimeLow={timeRemaining < 600} />
-      <SubjectTabs currentSubject={currentSubject} onSubjectChange={(s) => dispatch(setCurrentSubject(s))} />
+    <div className="h-screen flex flex-col bg-panel-bg exam-mode overflow-hidden select-none">
+      <ExamHeader 
+        examName="WebNexZ Foundation Fellowship" 
+        formattedTime={formattedTime} 
+        isTimeLow={timeRemaining < 600} 
+      />
+      
+      <SubjectTabs 
+        currentSubject={currentSubject} 
+        onSubjectChange={(s) => dispatch(setCurrentSubject(s))} 
+      />
 
       <div className="flex-1 flex overflow-hidden">
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-6 overflow-y-auto bg-white/50 backdrop-blur-sm">
             <QuestionPanel 
               question={currentQuestion} 
               selectedOption={currentQuestionState.selectedOption} 
@@ -119,7 +140,7 @@ const ExamPage = () => {
           />
         </div>
 
-        <div className="w-72 border-l border-panel-border">
+        <div className="w-80 border-l border-panel-border bg-card shadow-xl">
           <QuestionGrid 
             questions={currentSubjectState.questions} 
             currentQuestionIndex={currentQuestionIndex} 
@@ -140,7 +161,10 @@ const ExamPage = () => {
       {/* Proctoring UI Layers */}
       <LiveIndicators />
       <CameraPreview stream={cameraStream} />
-      <WarningModal /> {/* 🚨 This will now pop up for noise, tab switch, etc. */}
+      <WarningModal /> 
+
+      {/* 🚨 THE PROFESSIONAL TERMINATION MESSAGE */}
+      <TerminationModal isOpen={isAutoSubmitted} />
     </div>
   );
 };

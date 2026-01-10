@@ -40,22 +40,23 @@ const InstructionsPage = () => {
   };
 
   /* =====================================================
-     Instructions (Startup / Fellowship Oriented)
+      Instructions (Including Auto-Submit Thresholds)
   ===================================================== */
 
   const instructions = [
-  "This is an AI-proctored Computer Based Test (CBT) for the WebNexZ Foundation Fellowship.",
-  "The examination evaluates logical thinking, programming fundamentals, web technology awareness, and learning mindset.",
-  "All questions are compulsory and are of multiple-choice (MCQ) type.",
-  "There is no negative marking. Candidates are advised to answer based on their own understanding.",
-  "The webcam and microphone must remain enabled for the entire duration of the examination.",
-  "Candidates must not speak, frequently look away from the screen, or allow any other individual to appear in the camera view.",
-  "Switching browser tabs, minimizing the window, or exiting fullscreen mode will be detected and recorded.",
-  "AI-based systems continuously monitor face presence, audio levels, and suspicious activity.",
-  "The examination timer is controlled by the server and will auto-submit responses upon completion of the allotted time.",
-  "Any attempt to manipulate, bypass, or interfere with the proctoring system may result in immediate disqualification.",
-];
-
+    "This is an AI-proctored Computer Based Test (CBT) for the WebNexZ Foundation Fellowship.",
+    "The examination evaluates logical thinking, programming fundamentals, web technology awareness, and learning mindset.",
+    "All questions are compulsory and are of multiple-choice (MCQ) type. There is no negative marking.",
+    "The webcam and microphone must remain enabled for the entire duration of the examination.",
+    "AI-based systems continuously monitor face presence, audio levels, and suspicious activity.",
+    "The examination will AUTO-SUBMIT immediately if the following violation limits are reached:",
+    "• 5 Tab Switches / Window Minimized actions.",
+    "• 5 Instances of 'Face Not Detected' or 'Multiple Faces Detected'.",
+    "• 10 High Noise detections (Microphone monitoring).",
+    "• 20 Total cumulative warnings of any nature.",
+    "Any attempt to manipulate or interfere with the proctoring system results in immediate disqualification.",
+    "The exam timer is server-controlled and will auto-submit responses when the time reaches zero.",
+  ];
 
   const legendItems = [
     { color: "bg-question-not-visited", label: "Not Visited" },
@@ -73,7 +74,6 @@ const InstructionsPage = () => {
       {/* Header */}
       <header className="bg-exam-header text-exam-header-foreground border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          {/* Left: Logo + Title */}
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-md">
               <img
@@ -99,7 +99,6 @@ const InstructionsPage = () => {
             </div>
           </div>
 
-          {/* Right: CBT + Date */}
           <div className="hidden md:flex flex-col items-end text-right">
             <span className="text-sm font-semibold text-white">
               Computer Based Test (CBT)
@@ -112,7 +111,7 @@ const InstructionsPage = () => {
         </div>
       </header>
 
-      {/* Main */}
+      {/* Main Content */}
       <main className="flex-1 py-6 px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -123,29 +122,21 @@ const InstructionsPage = () => {
             <div className="bg-card rounded-lg border border-border p-4 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    Candidate Name
-                  </p>
+                  <p className="text-sm text-muted-foreground">Candidate Name</p>
                   <p className="font-semibold text-foreground">{user?.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    Application Number
-                  </p>
-                  <p className="font-semibold text-foreground">
-                    {user?.applicationNumber}
-                  </p>
+                  <p className="text-sm text-muted-foreground">Application Number</p>
+                  <p className="font-semibold text-foreground">{user?.applicationNumber}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Exam</p>
-                  <p className="font-semibold text-foreground">
-                    Launchpad Entrance Test
-                  </p>
+                  <p className="font-semibold text-foreground">Launchpad Entrance Test</p>
                 </div>
               </div>
             </div>
 
-            {/* Exam Overview */}
+            {/* Exam Overview Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <OverviewCard
                 icon={<FileText className="h-6 w-6 text-primary" />}
@@ -164,34 +155,40 @@ const InstructionsPage = () => {
               />
             </div>
 
-            {/* Instructions */}
+            {/* Detailed Instructions Section */}
             <div className="bg-card rounded-lg border border-border p-6 mb-6">
               <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-warning" />
-                Important Instructions
+                <Shield className="h-5 w-5 text-primary" />
+                Security & Conduct Rules
               </h2>
               <ol className="space-y-3">
                 {instructions.map((instruction, index) => (
                   <li key={index} className="flex gap-3 text-sm">
-                    <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
+                    <span className="w-6 h-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
                       {index + 1}
                     </span>
-                    <span className="pt-0.5">{instruction}</span>
+                    <span className="pt-0.5 text-muted-foreground leading-relaxed">
+                      {instruction.startsWith("•") ? (
+                        <span className="text-red-500 font-medium">{instruction}</span>
+                      ) : (
+                        instruction
+                      )}
+                    </span>
                   </li>
                 ))}
               </ol>
             </div>
 
-            {/* Legend */}
+            {/* Question Status Legend */}
             <div className="bg-card rounded-lg border border-border p-6 mb-6">
               <h2 className="text-lg font-semibold text-foreground mb-4">
                 Question Status Legend
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 {legendItems.map((item, index) => (
                   <div key={index} className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded ${item.color}`} />
-                    <span className="text-sm text-foreground">
+                    <div className={`w-8 h-8 rounded shadow-sm border ${item.color}`} />
+                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-tight">
                       {item.label}
                     </span>
                   </div>
@@ -199,35 +196,39 @@ const InstructionsPage = () => {
               </div>
             </div>
 
-            {/* Agreement */}
-            <div className="bg-card rounded-lg border border-border p-6">
-              <div className="flex items-start gap-3 mb-6">
-                <button onClick={() => setAgreed(!agreed)}>
+            {/* Final Agreement & Action */}
+            <div className="bg-card rounded-lg border-2 border-primary/20 p-8 shadow-inner">
+              <div className="flex items-start gap-4 mb-8">
+                <button 
+                  onClick={() => setAgreed(!agreed)}
+                  className="mt-1 transition-transform active:scale-90"
+                >
                   {agreed ? (
-                    <CheckSquare className="h-6 w-6 text-primary" />
+                    <CheckSquare className="h-7 w-7 text-primary" />
                   ) : (
-                    <Square className="h-6 w-6 text-muted-foreground" />
+                    <Square className="h-7 w-7 text-muted-foreground" />
                   )}
                 </button>
-                <p className="text-sm text-foreground">
-                  I have read and understood the instructions. I agree to comply
-                  with AI proctoring, behavioral rules, and ethical conduct
-                  required for the WebNexZ Foundation Fellowship.
+                <p className="text-sm text-foreground/90 leading-relaxed font-medium">
+                  I solemnly declare that I have read and understood all the instructions, 
+                  specifically the automated submission thresholds. I consent to AI 
+                  monitoring and acknowledge that any breach of conduct will result in 
+                  immediate termination of the WebNexZ Fellowship Examination.
                 </p>
               </div>
 
               <button
                 onClick={handleStartExam}
                 disabled={!agreed}
-                className={`w-full py-3 rounded-lg font-semibold transition-all ${
+                className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all ${
                   agreed
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                    ? "bg-primary text-primary-foreground hover:scale-[1.01] hover:bg-primary/90 active:scale-[0.99]"
+                    : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
                 }`}
               >
                 {agreed
-                  ? "Proceed to Proctoring Setup"
-                  : "Please accept the instructions to continue"}
+                  ? "Agree & Proceed to Setup"
+                  : "Please Accept Agreement to Continue"}
               </button>
             </div>
           </motion.div>
@@ -237,10 +238,7 @@ const InstructionsPage = () => {
   );
 };
 
-/* =====================================================
-   Reusable Card
-===================================================== */
-
+/* --- Reusable Overview Component --- */
 const OverviewCard = ({
   icon,
   title,
@@ -250,13 +248,15 @@ const OverviewCard = ({
   title: string;
   subtitle: string;
 }) => (
-  <div className="bg-card rounded-lg border border-border p-4 flex items-center gap-4">
-    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+  <div className="bg-card rounded-lg border border-border p-5 flex items-center gap-4 hover:border-primary/50 transition-colors">
+    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
       {icon}
     </div>
     <div>
-      <p className="text-2xl font-bold text-foreground">{title}</p>
-      <p className="text-sm text-muted-foreground">{subtitle}</p>
+      <p className="text-2xl font-bold text-foreground leading-none">{title}</p>
+      <p className="text-xs text-muted-foreground font-medium mt-1 uppercase tracking-wide">
+        {subtitle}
+      </p>
     </div>
   </div>
 );
