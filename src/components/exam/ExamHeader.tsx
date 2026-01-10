@@ -12,11 +12,17 @@ export const ExamHeader = ({ examName, formattedTime, isTimeLow }: ExamHeaderPro
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-white rounded flex items-center justify-center">
-            <span className="text-primary font-bold text-xl">NTA</span>
+            <span className="text-primary font-bold text-xl">
+              <img
+                src="https://webnexzfoundation.saredufywpa.in/public/logo.png"
+                alt="WebNexZ Foundation"
+                className="w-16 h-16 object-contain"
+              />
+            </span>
           </div>
           <div>
-            <h1 className="text-xl font-semibold">{examName}</h1>
-            <p className="text-sm text-white/80">Computer Based Test</p>
+            <h1 className="text-xl font-semibold">WebNexZ Fellowship Entrance & Scholarship Exam</h1>
+            <p className="text-sm text-white/80">(CBT) Computer Based Test</p>
           </div>
         </div>
         

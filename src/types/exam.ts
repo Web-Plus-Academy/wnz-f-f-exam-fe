@@ -1,4 +1,16 @@
-export type Subject = 'mathematics' | 'physics' | 'chemistry';
+/* =====================================================
+   SUBJECT TYPES (UPDATED)
+===================================================== */
+
+export type Subject =
+  | 'aptitude'
+  | 'programming'
+  | 'web'
+  | 'mindset';
+
+/* =====================================================
+   QUESTION MODEL
+===================================================== */
 
 export interface Question {
   id: string;
@@ -14,11 +26,15 @@ export interface Question {
   correctAnswer: 'A' | 'B' | 'C' | 'D';
 }
 
-export type QuestionStatus = 
-  | 'not-visited' 
-  | 'visited' 
-  | 'answered' 
-  | 'marked' 
+/* =====================================================
+   QUESTION STATUS
+===================================================== */
+
+export type QuestionStatus =
+  | 'not-visited'
+  | 'visited'
+  | 'answered'
+  | 'marked'
   | 'marked-answered';
 
 export interface QuestionState {
@@ -27,10 +43,18 @@ export interface QuestionState {
   selectedOption: 'A' | 'B' | 'C' | 'D' | null;
 }
 
+/* =====================================================
+   SUBJECT STATE
+===================================================== */
+
 export interface SubjectState {
   questions: QuestionState[];
   currentQuestionIndex: number;
 }
+
+/* =====================================================
+   EXAM STATE (UPDATED)
+===================================================== */
 
 export interface ExamState {
   subjects: Record<Subject, SubjectState>;
@@ -39,6 +63,10 @@ export interface ExamState {
   isSubmitted: boolean;
   startTime: number | null;
 }
+
+/* =====================================================
+   AUTH / USER INFO
+===================================================== */
 
 export interface UserInfo {
   applicationNumber: string;

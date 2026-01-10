@@ -1,10 +1,36 @@
+// Centralized warning types for the entire exam system
+export type ProctoringWarningType =
+  // Navigation / Focus
+  | "tab_switch"
+  | "window_blur"
+  | "fullscreen_exit"
+
+  // Camera / Face
+  | "face_not_detected"
+  | "multiple_faces"
+  | "camera_blocked"
+
+  // Microphone / Noise
+  | "mic_blocked"
+  | "noise_detected"
+
+  // Screen / Sharing
+  | "screen_permission_denied"
+  | "screen_share_stopped"
+
+  // System / Generic
+  | "system_violation";
+
+
 export interface ProctoringWarning {
   id: string;
-  type: 'tab_switch' | 'face_not_detected' | 'multiple_faces' | 'noise_detected' | 'screen_share_stopped' | 'camera_blocked' | 'mic_blocked';
+  type: ProctoringWarningType;
   message: string;
+  severity: "low" | "medium" | "high";
   timestamp: number;
-  severity: 'low' | 'medium' | 'high';
 }
+
+
 
 export interface ProctoringState {
   // Setup status
@@ -25,6 +51,9 @@ export interface ProctoringState {
   faceDetected: boolean;
   faceCount: number;
   lastFaceCheck: number | null;
+
+    /* ✅ ADD THIS */
+  cameraImage: string | null;
   
   // Noise detection
   noiseLevel: number; // 0-100

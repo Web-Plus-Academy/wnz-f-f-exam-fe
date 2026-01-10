@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Mic, CheckCircle, XCircle, Loader2, Volume2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Mic, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { setNoiseLevel } from "@/store/proctoringSlice";
 
 interface MicrophoneSetupProps {
   onSuccess: (stream: MediaStream) => void;
@@ -9,164 +11,157 @@ interface MicrophoneSetupProps {
 }
 
 export const MicrophoneSetup = ({ onSuccess, onBack }: MicrophoneSetupProps) => {
-  const [status, setStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied'>('idle');
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const dispatch = useAppDispatch();
+  
+  const [status, setStatus] = useState<"idle" | "requesting" | "granted" | "denied">("idle");
   const [audioLevel, setAudioLevel] = useState(0);
+  const [isTooLoud, setIsTooLoud] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | null>(null);
 
   const requestMicrophone = async () => {
-    setStatus('requesting');
+    setStatus("requesting");
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: false, 
+          autoGainControl: true,
+        },
       });
       setStream(mediaStream);
-      setStatus('granted');
-      
-      // Start audio visualization
-      audioContextRef.current = new AudioContext();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
-      
-      const source = audioContextRef.current.createMediaStreamSource(mediaStream);
-      source.connect(analyserRef.current);
-      
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      
-      const updateLevel = () => {
+      setStatus("granted");
+
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.2;
+
+      const source = audioContext.createMediaStreamSource(mediaStream);
+      source.connect(analyser);
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      const detectNoise = () => {
         if (!analyserRef.current) return;
         analyserRef.current.getByteFrequencyData(dataArray);
-        const average = dataArray.reduce((a, b) => a + b, 0) / bufferLength;
-        setAudioLevel(Math.min(100, (average / 255) * 100 * 2));
-        animationRef.current = requestAnimationFrame(updateLevel);
-      };
-      
-      updateLevel();
-    } catch (error) {
-      console.error('Microphone access denied:', error);
-      setStatus('denied');
-    }
-  };
 
-  const handleContinue = () => {
-    if (stream) {
-      onSuccess(stream);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i] * dataArray[i];
+        }
+        const rms = Math.sqrt(sum / dataArray.length);
+
+        // Normalize level for UI feedback
+        const normalizedLevel = Math.min(100, (rms / 128) * 100);
+        setAudioLevel(normalizedLevel);
+        
+        // Update global state for visual indicators elsewhere
+        dispatch(setNoiseLevel(normalizedLevel));
+
+        // UI Threshold check
+        if (normalizedLevel > 40) {
+          setIsTooLoud(true);
+          // 🚀 Warning modal dispatch removed from here as requested
+        } else {
+          setIsTooLoud(false);
+        }
+        animationRef.current = requestAnimationFrame(detectNoise);
+      };
+
+      detectNoise();
+    } catch (e) {
+      setStatus("denied");
     }
   };
 
   useEffect(() => {
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (audioContextRef.current) audioContextRef.current.close();
     };
   }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-2xl mx-auto"
-    >
-      <div className="bg-card rounded-lg border border-border p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-            <Mic className="h-6 w-6 text-primary" />
+    <div className="max-w-2xl mx-auto p-4">
+      <div className="bg-card rounded-2xl border p-8 shadow-xl">
+        <div className="flex items-center gap-4 mb-8">
+          <div className={`p-3 rounded-xl transition-colors ${isTooLoud ? "bg-red-500/10" : "bg-primary/10"}`}>
+            <Mic className={`h-8 w-8 ${isTooLoud ? "text-red-500" : "text-primary"}`} />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-foreground">Microphone Setup</h2>
-            <p className="text-sm text-muted-foreground">Step 2 of 3</p>
+            <h2 className="text-2xl font-bold font-heading tracking-tight">Acoustic Monitoring</h2>
+            <p className="text-sm text-muted-foreground">Adjust your environment until the bar stays below the red line.</p>
           </div>
         </div>
 
-        <div className="bg-muted rounded-lg p-8 mb-6">
-          <div className="flex flex-col items-center">
-            {status === 'idle' && (
-              <>
-                <Mic className="h-20 w-20 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Click to enable microphone</p>
-              </>
-            )}
-            {status === 'requesting' && (
-              <>
-                <Loader2 className="h-20 w-20 text-primary mb-4 animate-spin" />
-                <p className="text-muted-foreground">Requesting microphone access...</p>
-              </>
-            )}
-            {status === 'denied' && (
-              <>
-                <XCircle className="h-20 w-20 text-destructive mb-4" />
-                <p className="text-destructive font-medium">Microphone access denied</p>
-                <p className="text-sm text-muted-foreground mt-2">Please enable microphone in browser settings</p>
-              </>
-            )}
-            {status === 'granted' && (
-              <>
-                <div className="relative mb-4">
-                  <Volume2 className="h-20 w-20 text-primary" />
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-                    <CheckCircle className="h-8 w-8 text-green-500 bg-white rounded-full" />
-                  </div>
+        <div className={`rounded-2xl p-10 mb-8 border-2 flex flex-col items-center min-h-[300px] transition-all duration-200 ${
+          isTooLoud ? "bg-red-500/5 border-red-500 shadow-inner" : "bg-muted/30 border-dashed border-border"
+        }`}>
+          {status === "granted" ? (
+            <div className="w-full space-y-8">
+              <div className="flex justify-center h-20">
+                <AnimatePresence mode="wait">
+                  {isTooLoud ? (
+                    <motion.div key="loud" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1.1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
+                      <VolumeX className="h-20 w-20 text-red-500" />
+                    </motion.div>
+                  ) : (
+                    <motion.div key="quiet" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
+                      <Volume2 className="h-20 w-20 text-primary" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Mic Input</span>
+                  <span className={`text-2xl font-mono font-bold ${isTooLoud ? "text-red-500" : "text-primary"}`}>
+                    {Math.round(audioLevel)}%
+                  </span>
                 </div>
-                <p className="text-foreground font-medium mb-4">Microphone Active</p>
-                
-                {/* Audio level indicator */}
-                <div className="w-full max-w-xs">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm text-muted-foreground">Audio Level:</span>
-                    <span className="text-sm font-medium">{Math.round(audioLevel)}%</span>
-                  </div>
-                  <div className="h-4 bg-muted-foreground/20 rounded-full overflow-hidden">
-                    <motion.div
-                      className={`h-full transition-colors ${
-                        audioLevel > 60 ? 'bg-green-500' : audioLevel > 30 ? 'bg-yellow-500' : 'bg-primary'
-                      }`}
-                      animate={{ width: `${audioLevel}%` }}
-                      transition={{ duration: 0.1 }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
-                    Speak to test your microphone
-                  </p>
+
+                <div className="h-4 bg-background rounded-full border border-border overflow-hidden relative shadow-sm">
+                  <div className="absolute left-[40%] top-0 bottom-0 w-0.5 bg-red-500/40 z-10" />
+                  <motion.div
+                    className={`h-full ${isTooLoud ? "bg-red-500" : "bg-primary"}`}
+                    animate={{ width: `${audioLevel}%` }}
+                    transition={{ type: "spring", bounce: 0, duration: 0.1 }}
+                  />
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <div className="bg-muted h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                 {status === "requesting" ? <Loader2 className="animate-spin text-primary" /> : <Mic className="text-muted-foreground" />}
+              </div>
+              <Button onClick={requestMicrophone} size="lg" className="rounded-full px-8 font-bold">
+                {status === "requesting" ? "Requesting..." : "Enable Microphone"}
+              </Button>
+            </div>
+          )}
         </div>
 
-        <div className="space-y-3">
-          {status === 'idle' && (
-            <Button onClick={requestMicrophone} className="w-full" size="lg">
-              Enable Microphone
-            </Button>
-          )}
-          {status === 'requesting' && (
-            <Button disabled className="w-full" size="lg">
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Requesting Permission...
-            </Button>
-          )}
-          {status === 'granted' && (
-            <Button onClick={handleContinue} className="w-full" size="lg">
-              Continue to Screen Recording
-            </Button>
-          )}
-          {status === 'denied' && (
-            <Button onClick={requestMicrophone} variant="outline" className="w-full" size="lg">
-              Try Again
-            </Button>
-          )}
-          <Button onClick={onBack} variant="ghost" className="w-full">
-            Back to Camera
+        <div className="flex flex-col gap-3">
+          <Button
+            onClick={() => onSuccess(stream!)}
+            className="w-full h-14 text-lg font-bold shadow-lg transition-transform active:scale-[0.98]"
+            disabled={!stream || isTooLoud}
+          >
+            {isTooLoud ? "Too Noisy to Proceed" : "Proceed to Exam"}
+          </Button>
+          <Button onClick={onBack} variant="ghost" className="text-muted-foreground">
+            Back
           </Button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

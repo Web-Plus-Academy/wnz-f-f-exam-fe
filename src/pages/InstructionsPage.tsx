@@ -1,17 +1,24 @@
-import { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { CheckSquare, Square, AlertTriangle, Clock, BookOpen, FileText } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/hooks/useAppDispatch';
-import { setHasReadInstructions } from '@/store/authSlice';
-import { startExam } from '@/store/examSlice';
-import { TOTAL_QUESTIONS, QUESTIONS_PER_SUBJECT, EXAM_DURATION } from '@/data/questions';
+import { useState } from "react";
+import { useNavigate, Navigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  CheckSquare,
+  Square,
+  AlertTriangle,
+  Clock,
+  BookOpen,
+  FileText,
+  Shield,
+} from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/hooks/useAppDispatch";
+import { setHasReadInstructions } from "@/store/authSlice";
+import { EXAM_DURATION, TOTAL_QUESTIONS } from "@/data/questions";
 
 const InstructionsPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
-  
+
   const [agreed, setAgreed] = useState(false);
 
   if (!isAuthenticated) {
@@ -21,106 +28,140 @@ const InstructionsPage = () => {
   const handleStartExam = () => {
     if (!agreed) return;
     dispatch(setHasReadInstructions(true));
-    navigate('/proctoring-setup');
+    navigate("/proctoring-setup");
   };
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours} hour${hours > 1 ? 's' : ''}${minutes > 0 ? ` ${minutes} minutes` : ''}`;
+    return `${hours} hour${hours > 1 ? "s" : ""}${
+      minutes > 0 ? ` ${minutes} minutes` : ""
+    }`;
   };
 
+  /* =====================================================
+     Instructions (Startup / Fellowship Oriented)
+  ===================================================== */
+
   const instructions = [
-    'The examination will comprise of Objective Type Multiple Choice Questions (MCQs).',
-    'All questions are compulsory and each carries equal marks.',
-    'There is NO negative marking for incorrect answers.',
-    'The clock will be set at the server. The countdown timer in the top right corner will display the remaining time available for you to complete the examination.',
-    'When the timer reaches zero, the examination will end by itself. You will NOT be required to end or submit your examination.',
-    'You can click on the question number in the Question Palette to go to that question directly.',
-    'Do NOT refresh the page or use the browser back button during the examination.',
-    'Switching tabs or windows during the exam is strictly prohibited and may be flagged.',
-    'Right-click menu and keyboard shortcuts are disabled during the examination.',
-    'You can mark questions for review and revisit them before final submission.',
-  ];
+  "This is an AI-proctored Computer Based Test (CBT) for the WebNexZ Foundation Fellowship.",
+  "The examination evaluates logical thinking, programming fundamentals, web technology awareness, and learning mindset.",
+  "All questions are compulsory and are of multiple-choice (MCQ) type.",
+  "There is no negative marking. Candidates are advised to answer based on their own understanding.",
+  "The webcam and microphone must remain enabled for the entire duration of the examination.",
+  "Candidates must not speak, frequently look away from the screen, or allow any other individual to appear in the camera view.",
+  "Switching browser tabs, minimizing the window, or exiting fullscreen mode will be detected and recorded.",
+  "AI-based systems continuously monitor face presence, audio levels, and suspicious activity.",
+  "The examination timer is controlled by the server and will auto-submit responses upon completion of the allotted time.",
+  "Any attempt to manipulate, bypass, or interfere with the proctoring system may result in immediate disqualification.",
+];
+
 
   const legendItems = [
-    { color: 'bg-question-not-visited', label: 'Not Visited - Question not yet accessed' },
-    { color: 'bg-question-visited', label: 'Not Answered - Question visited but not answered' },
-    { color: 'bg-question-answered', label: 'Answered - Question has been answered' },
-    { color: 'bg-question-marked', label: 'Marked for Review - Question marked but not answered' },
-    { color: 'bg-question-marked-answered', label: 'Answered & Marked - Question answered and marked for review' },
+    { color: "bg-question-not-visited", label: "Not Visited" },
+    { color: "bg-question-visited", label: "Visited (Not Answered)" },
+    { color: "bg-question-answered", label: "Answered" },
+    { color: "bg-question-marked", label: "Marked for Review" },
+    {
+      color: "bg-question-marked-answered",
+      label: "Answered & Marked",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-panel-bg flex flex-col">
       {/* Header */}
-      <header className="bg-exam-header text-exam-header-foreground py-4 px-6">
-        <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-md">
-            <span className="text-primary font-bold text-xl">NTA</span>
+      <header className="bg-exam-header text-exam-header-foreground border-b border-white/10">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          {/* Left: Logo + Title */}
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-md">
+              <img
+                src="https://webnexzfoundation.saredufywpa.in/public/logo.png"
+                alt="WebNexZ Foundation"
+                className="w-16 h-16 object-contain"
+              />
+            </div>
+
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight">
+                WebNexZ Foundation
+              </h1>
+              <p className="text-sm md:text-base text-white/80">
+                Fellowship Entrance & Scholarship Examination
+              </p>
+              <p className="text-xs text-white/60 mt-0.5">
+                Powered by{" "}
+                <span className="font-semibold text-white">
+                  Saredufy Web Plus Academy Pvt. Ltd.
+                </span>
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold">JEE Main 2024 - Model Test</h1>
-            <p className="text-white/80 text-sm">Instructions & Guidelines</p>
+
+          {/* Right: CBT + Date */}
+          <div className="hidden md:flex flex-col items-end text-right">
+            <span className="text-sm font-semibold text-white">
+              Computer Based Test (CBT)
+            </span>
+            <span className="text-sm text-white/80">March 26, 2026</span>
+            <span className="text-xs text-green-400 font-medium mt-0.5">
+              AI-Proctored • Secure Examination
+            </span>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <main className="flex-1 py-6 px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
           >
-            {/* Candidate Info Card */}
+            {/* Candidate Info */}
             <div className="bg-card rounded-lg border border-border p-4 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Candidate Name</p>
+                  <p className="text-sm text-muted-foreground">
+                    Candidate Name
+                  </p>
                   <p className="font-semibold text-foreground">{user?.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Application Number</p>
-                  <p className="font-semibold text-foreground">{user?.applicationNumber}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Application Number
+                  </p>
+                  <p className="font-semibold text-foreground">
+                    {user?.applicationNumber}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Exam Name</p>
-                  <p className="font-semibold text-foreground">JEE Main Model Test</p>
+                  <p className="text-sm text-muted-foreground">Exam</p>
+                  <p className="font-semibold text-foreground">
+                    Launchpad Entrance Test
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Exam Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-card rounded-lg border border-border p-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{TOTAL_QUESTIONS}</p>
-                  <p className="text-sm text-muted-foreground">Total Questions</p>
-                </div>
-              </div>
-              <div className="bg-card rounded-lg border border-border p-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">3</p>
-                  <p className="text-sm text-muted-foreground">Subjects ({QUESTIONS_PER_SUBJECT} each)</p>
-                </div>
-              </div>
-              <div className="bg-card rounded-lg border border-border p-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{formatDuration(EXAM_DURATION)}</p>
-                  <p className="text-sm text-muted-foreground">Duration</p>
-                </div>
-              </div>
+              <OverviewCard
+                icon={<FileText className="h-6 w-6 text-primary" />}
+                title={TOTAL_QUESTIONS.toString()}
+                subtitle="Total Questions"
+              />
+              <OverviewCard
+                icon={<BookOpen className="h-6 w-6 text-primary" />}
+                title="4"
+                subtitle="Assessment Sections"
+              />
+              <OverviewCard
+                icon={<Clock className="h-6 w-6 text-primary" />}
+                title={formatDuration(EXAM_DURATION)}
+                subtitle="Total Duration"
+              />
             </div>
 
             {/* Instructions */}
@@ -131,8 +172,8 @@ const InstructionsPage = () => {
               </h2>
               <ol className="space-y-3">
                 {instructions.map((instruction, index) => (
-                  <li key={index} className="flex gap-3 text-sm text-foreground">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
+                  <li key={index} className="flex gap-3 text-sm">
+                    <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
                       {index + 1}
                     </span>
                     <span className="pt-0.5">{instruction}</span>
@@ -141,7 +182,7 @@ const InstructionsPage = () => {
               </ol>
             </div>
 
-            {/* Question Status Legend */}
+            {/* Legend */}
             <div className="bg-card rounded-lg border border-border p-6 mb-6">
               <h2 className="text-lg font-semibold text-foreground mb-4">
                 Question Status Legend
@@ -150,19 +191,18 @@ const InstructionsPage = () => {
                 {legendItems.map((item, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded ${item.color}`} />
-                    <span className="text-sm text-foreground">{item.label}</span>
+                    <span className="text-sm text-foreground">
+                      {item.label}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Agreement & Start */}
+            {/* Agreement */}
             <div className="bg-card rounded-lg border border-border p-6">
               <div className="flex items-start gap-3 mb-6">
-                <button
-                  onClick={() => setAgreed(!agreed)}
-                  className="flex-shrink-0 mt-0.5"
-                >
+                <button onClick={() => setAgreed(!agreed)}>
                   {agreed ? (
                     <CheckSquare className="h-6 w-6 text-primary" />
                   ) : (
@@ -170,7 +210,9 @@ const InstructionsPage = () => {
                   )}
                 </button>
                 <p className="text-sm text-foreground">
-                  I have read and understood the instructions. I agree to abide by the rules and regulations of the examination. I understand that any malpractice will lead to disqualification.
+                  I have read and understood the instructions. I agree to comply
+                  with AI proctoring, behavioral rules, and ethical conduct
+                  required for the WebNexZ Foundation Fellowship.
                 </p>
               </div>
 
@@ -179,11 +221,13 @@ const InstructionsPage = () => {
                 disabled={!agreed}
                 className={`w-full py-3 rounded-lg font-semibold transition-all ${
                   agreed
-                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
                 }`}
               >
-                {agreed ? 'Start Examination' : 'Please read and accept the instructions to proceed'}
+                {agreed
+                  ? "Proceed to Proctoring Setup"
+                  : "Please accept the instructions to continue"}
               </button>
             </div>
           </motion.div>
@@ -192,5 +236,29 @@ const InstructionsPage = () => {
     </div>
   );
 };
+
+/* =====================================================
+   Reusable Card
+===================================================== */
+
+const OverviewCard = ({
+  icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+}) => (
+  <div className="bg-card rounded-lg border border-border p-4 flex items-center gap-4">
+    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+      {icon}
+    </div>
+    <div>
+      <p className="text-2xl font-bold text-foreground">{title}</p>
+      <p className="text-sm text-muted-foreground">{subtitle}</p>
+    </div>
+  </div>
+);
 
 export default InstructionsPage;

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Minimize2, Maximize2, User, UserX, Users } from 'lucide-react';
-import { useAppSelector } from '@/hooks/useAppDispatch';
-import { useFaceDetection } from '@/hooks/useFaceDetection';
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Camera, Minimize2, User, UserX, Users } from "lucide-react";
+import { useAppSelector } from "@/hooks/useAppDispatch";
+import { useFaceDetection } from "@/hooks/useFaceDetection";
 
 interface CameraPreviewProps {
   stream: MediaStream | null;
@@ -10,86 +10,122 @@ interface CameraPreviewProps {
 
 export const CameraPreview = ({ stream }: CameraPreviewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const { faceDetected, faceCount, cameraStream } = useAppSelector((state) => state.proctoring);
-  
-  // Enable face detection
-  useFaceDetection(videoRef, cameraStream);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+
+  const dragOffset = useRef({ x: 0, y: 0 });
+
+  // Get faceCount from Redux
+  const { faceCount } = useAppSelector((state) => state.proctoring);
+
+  /**
+   * 🧠 FIX: Pass '!!stream' to satisfy the 'isActive: boolean' requirement
+   * This tells the hook to start detecting only when the camera is on.
+   */
+  useFaceDetection(videoRef, !!stream);
+
+  // 🎥 Attach stream to video element
   useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-    }
+    const video = videoRef.current;
+    if (!video || !stream) return;
+
+    video.srcObject = stream;
+    
+    const handlePlay = () => setIsVideoReady(true);
+    video.addEventListener("playing", handlePlay);
+    
+    video.play().catch((err) => console.error("Video play failed:", err));
+
+    return () => {
+      video.removeEventListener("playing", handlePlay);
+      video.srcObject = null;
+    };
   }, [stream]);
 
-  const getFaceIcon = () => {
-    if (faceCount === 0) return <UserX className="h-3.5 w-3.5" />;
-    if (faceCount === 1) return <User className="h-3.5 w-3.5" />;
-    return <Users className="h-3.5 w-3.5" />;
-  };
+  // 📍 Initial Position Logic
+  useEffect(() => {
+    const margin = 16;
+    const width = isMinimized ? 56 : 192; 
+    const height = isMinimized ? 56 : 144;
+    setPosition({
+      x: window.innerWidth - width - margin,
+      y: window.innerHeight - height - margin,
+    });
+  }, [isMinimized]);
 
-  const getFaceStatus = () => {
-    if (faceCount === 0) return { text: 'No Face', color: 'bg-yellow-500' };
-    if (faceCount === 1) return { text: 'Face OK', color: 'bg-green-500' };
-    return { text: `${faceCount} Faces`, color: 'bg-orange-500' };
-  };
-
-  const faceStatus = getFaceStatus();
+  // 🖱 Drag Logic
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!dragging) return;
+      setPosition({
+        x: e.clientX - dragOffset.current.x,
+        y: e.clientY - dragOffset.current.y,
+      });
+    };
+    const onMouseUp = () => setDragging(false);
+    if (dragging) {
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [dragging]);
 
   if (!stream) return null;
 
+  const faceStatus = faceCount === 0 
+    ? { text: "No Face", color: "bg-red-500", icon: <UserX className="h-3.5 w-3.5" /> } 
+    : faceCount === 1 
+    ? { text: "Face OK", color: "bg-green-500", icon: <User className="h-3.5 w-3.5" /> } 
+    : { text: `${faceCount} Faces`, color: "bg-orange-500", icon: <Users className="h-3.5 w-3.5" /> };
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="fixed bottom-4 left-4 z-50"
+      ref={containerRef}
+      style={{ left: position.x, top: position.y }}
+      className="fixed z-50 cursor-move select-none"
+      onMouseDown={(e) => {
+        if (!containerRef.current) return;
+        setDragging(true);
+        const rect = containerRef.current.getBoundingClientRect();
+        dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      }}
     >
-      <AnimatePresence mode="wait">
+      <div className={`bg-card rounded-lg border border-border shadow-xl overflow-hidden transition-all duration-300 ${isMinimized ? "w-14 h-14" : "w-48 h-36"}`}>
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className={`w-full h-full object-cover ${isMinimized ? "opacity-0" : "opacity-100"}`}
+        />
         {isMinimized ? (
-          <motion.button
-            key="minimized"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => setIsMinimized(false)}
-            className="w-14 h-14 rounded-full bg-card border-2 border-border shadow-lg flex items-center justify-center hover:bg-muted transition-colors"
-          >
+          <button onClick={() => setIsMinimized(false)} className="absolute inset-0 flex items-center justify-center bg-background/80">
             <Camera className="h-6 w-6 text-primary" />
-          </motion.button>
+          </button>
         ) : (
-          <motion.div
-            key="expanded"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="bg-card rounded-lg border border-border shadow-xl overflow-hidden"
-          >
-            <div className="relative">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-48 h-36 object-cover"
-              />
-              
-              {/* Face status badge */}
+          isVideoReady && (
+            <>
               <div className={`absolute bottom-2 left-2 ${faceStatus.color} text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1`}>
-                {getFaceIcon()}
+                {faceStatus.icon}
                 {faceStatus.text}
               </div>
-
-              {/* Minimize button */}
               <button
-                onClick={() => setIsMinimized(true)}
-                className="absolute top-2 right-2 w-6 h-6 rounded bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+                className="absolute top-2 right-2 w-6 h-6 rounded bg-black/40 text-white flex items-center justify-center hover:bg-black/60"
               >
                 <Minimize2 className="h-4 w-4" />
               </button>
-            </div>
-          </motion.div>
+            </>
+          )
         )}
-      </AnimatePresence>
+      </div>
     </motion.div>
   );
 };

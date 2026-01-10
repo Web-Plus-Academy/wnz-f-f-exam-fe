@@ -1,79 +1,82 @@
-import { useState, useRef } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Shield } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/hooks/useAppDispatch';
-import { 
-  setCurrentStep, 
+import { useRef } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { Shield } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/hooks/useAppDispatch";
+
+import {
+  setCurrentStep,
   setPrivacyConsent,
   setCameraPermission,
-  setCameraStream,
+  setCameraImage,          // ✅ ADD THIS
   setMicrophonePermission,
   setMicrophoneStream,
-  setScreenPermission,
-  setScreenStream,
   completeSetup,
-} from '@/store/proctoringSlice';
+} from "@/store/proctoringSlice";
 
-import { PrivacyNotice } from '@/components/proctoring/PrivacyNotice';
-import { CameraSetup } from '@/components/proctoring/CameraSetup';
-import { MicrophoneSetup } from '@/components/proctoring/MicrophoneSetup';
-import { ScreenSetup } from '@/components/proctoring/ScreenSetup';
+import { PrivacyNotice } from "@/components/proctoring/PrivacyNotice";
+import { CameraSetup } from "@/components/proctoring/CameraSetup";
+import { MicrophoneSetup } from "@/components/proctoring/MicrophoneSetup";
+import { ScreenSetup } from "@/components/proctoring/ScreenSetup";
+
+const STEPS = ["privacy", "camera", "microphone", "screen"] as const;
 
 const ProctoringSetupPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { isAuthenticated, hasReadInstructions } = useAppSelector((state) => state.auth);
-  const { currentStep, setupCompleted } = useAppSelector((state) => state.proctoring);
-  
-  const cameraStreamRef = useRef<MediaStream | null>(null);
+
+  const { isAuthenticated, hasReadInstructions } = useAppSelector(
+    (state) => state.auth
+  );
+  const { currentStep, setupCompleted } = useAppSelector(
+    (state) => state.proctoring
+  );
+
   const micStreamRef = useRef<MediaStream | null>(null);
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
+  /* ---------------- Guards ---------------- */
+  if (!isAuthenticated) return <Navigate to="/" replace />;
+  if (!hasReadInstructions) return <Navigate to="/instructions" replace />;
+  if (setupCompleted) return <Navigate to="/exam" replace />;
 
-  if (!hasReadInstructions) {
-    return <Navigate to="/instructions" replace />;
-  }
-
-  if (setupCompleted) {
-    return <Navigate to="/exam" replace />;
-  }
+  /* ---------------- Handlers ---------------- */
 
   const handlePrivacyAccept = () => {
     dispatch(setPrivacyConsent(true));
-    dispatch(setCurrentStep('camera'));
+    dispatch(setCurrentStep("camera"));
   };
 
-  const handleCameraSuccess = (stream: MediaStream) => {
-    cameraStreamRef.current = stream;
-    dispatch(setCameraPermission('granted'));
-    dispatch(setCameraStream(true));
-    dispatch(setCurrentStep('microphone'));
+  // ✅ CAMERA RETURNS IMAGE (string)
+  const handleCameraSuccess = (image: string) => {
+    console.log("📸 Camera image received");
+
+    dispatch(setCameraPermission("granted"));
+    dispatch(setCameraImage(image));   // ✅ STORE IMAGE
+    dispatch(setCurrentStep("microphone"));
   };
 
+  // 🎤 MICROPHONE RETURNS STREAM
   const handleMicrophoneSuccess = (stream: MediaStream) => {
     micStreamRef.current = stream;
-    dispatch(setMicrophonePermission('granted'));
+
+    dispatch(setMicrophonePermission("granted"));
     dispatch(setMicrophoneStream(true));
-    dispatch(setCurrentStep('screen'));
+    dispatch(setCurrentStep("screen"));
   };
 
-  const handleScreenSuccess = () => {
-    dispatch(setScreenPermission('granted'));
-    dispatch(setScreenStream(true));
+  const handleStartExam = () => {
     dispatch(completeSetup());
-    navigate('/exam');
+    navigate("/exam");
   };
 
   const handleBackToCamera = () => {
-    dispatch(setCurrentStep('camera'));
+    dispatch(setCurrentStep("camera"));
   };
 
   const handleBackToMicrophone = () => {
-    dispatch(setCurrentStep('microphone'));
+    dispatch(setCurrentStep("microphone"));
   };
+
+  const currentIndex = STEPS.indexOf(currentStep as any);
 
   return (
     <div className="min-h-screen bg-panel-bg flex flex-col">
@@ -85,43 +88,58 @@ const ProctoringSetupPage = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold">Proctoring Setup</h1>
-            <p className="text-white/80 text-sm">Complete the setup to start your examination</p>
+            <p className="text-white/80 text-sm">
+              Complete all steps to start your examination
+            </p>
           </div>
         </div>
       </header>
 
-      {/* Progress Steps */}
+      {/* Progress */}
       <div className="bg-card border-b border-border py-4">
         <div className="max-w-2xl mx-auto px-6">
           <div className="flex items-center justify-between">
-            {['privacy', 'camera', 'microphone', 'screen'].map((step, index) => {
-              const steps = ['privacy', 'camera', 'microphone', 'screen'];
-              const currentIndex = steps.indexOf(currentStep);
-              const isActive = step === currentStep;
+            {STEPS.map((step, index) => {
+              const isActive = index === currentIndex;
               const isCompleted = index < currentIndex;
-              
+
               return (
                 <div key={step} className="flex items-center">
-                  <div className={`flex items-center gap-2 ${
-                    isActive ? 'text-primary' : isCompleted ? 'text-green-500' : 'text-muted-foreground'
-                  }`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      isActive 
-                        ? 'bg-primary text-primary-foreground' 
-                        : isCompleted 
-                          ? 'bg-green-500 text-white'
-                          : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {isCompleted ? '✓' : index + 1}
+                  <div
+                    className={`flex items-center gap-2 ${
+                      isActive
+                        ? "text-primary"
+                        : isCompleted
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : isCompleted
+                          ? "bg-green-500 text-white"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {isCompleted ? "✓" : index + 1}
                     </div>
                     <span className="text-sm font-medium capitalize hidden sm:block">
-                      {step === 'privacy' ? 'Privacy' : step}
+                      {step === "privacy"
+                        ? "Privacy"
+                        : step === "screen"
+                        ? "Start Exam"
+                        : step}
                     </span>
                   </div>
-                  {index < 3 && (
-                    <div className={`w-12 sm:w-20 h-0.5 mx-2 ${
-                      isCompleted ? 'bg-green-500' : 'bg-muted'
-                    }`} />
+
+                  {index < STEPS.length - 1 && (
+                    <div
+                      className={`w-12 sm:w-20 h-0.5 mx-2 ${
+                        isCompleted ? "bg-green-500" : "bg-muted"
+                      }`}
+                    />
                   )}
                 </div>
               );
@@ -130,23 +148,26 @@ const ProctoringSetupPage = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Content */}
       <main className="flex-1 py-8 px-6">
-        {currentStep === 'privacy' && (
+        {currentStep === "privacy" && (
           <PrivacyNotice onAccept={handlePrivacyAccept} />
         )}
-        {currentStep === 'camera' && (
+
+        {currentStep === "camera" && (
           <CameraSetup onSuccess={handleCameraSuccess} />
         )}
-        {currentStep === 'microphone' && (
-          <MicrophoneSetup 
-            onSuccess={handleMicrophoneSuccess} 
+
+        {currentStep === "microphone" && (
+          <MicrophoneSetup
+            onSuccess={handleMicrophoneSuccess}
             onBack={handleBackToCamera}
           />
         )}
-        {currentStep === 'screen' && (
-          <ScreenSetup 
-            onSuccess={handleScreenSuccess}
+
+        {currentStep === "screen" && (
+          <ScreenSetup
+            onSuccess={handleStartExam}
             onBack={handleBackToMicrophone}
           />
         )}

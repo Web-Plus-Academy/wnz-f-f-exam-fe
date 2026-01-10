@@ -1,126 +1,263 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Camera, CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Camera, Loader2, XCircle, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FaceDetection } from "@mediapipe/face_detection";
+import { Camera as MPCamera } from "@mediapipe/camera_utils";
 
 interface CameraSetupProps {
-  onSuccess: (stream: MediaStream) => void;
-  onSkip?: () => void;
+  onSuccess?: (image: string) => void;
 }
 
-export const CameraSetup = ({ onSuccess, onSkip }: CameraSetupProps) => {
+export const CameraSetup = ({ onSuccess }: CameraSetupProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [status, setStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied'>('idle');
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const [status, setStatus] = useState<
+    "idle" | "requesting" | "granted" | "denied"
+  >("idle");
+
+  const [videoReady, setVideoReady] = useState(false);
+  const [snapshot, setSnapshot] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(3);
+  const [restartKey, setRestartKey] = useState(0);
+  const [faceValid, setFaceValid] = useState(false);
+  const [faceError, setFaceError] = useState<string | null>(null);
+
+  /* 📸 SNAPSHOT */
+  const captureSnapshot = (): string | null => {
+    if (!videoRef.current || !canvasRef.current) return null;
+    if (!faceValid) return null; // 🔒 FACE CHECK
+
+    const video = videoRef.current;
+    if (video.videoWidth === 0) return null;
+
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx?.drawImage(video, 0, 0);
+
+    return canvas.toDataURL("image/jpeg", 0.9);
+  };
+
+  /* 🎥 CAMERA */
   const requestCamera = async () => {
-    setStatus('requesting');
+    setStatus("requesting");
+    setSnapshot(null);
+    setCountdown(3);
+    setFaceValid(false);
+    setFaceError(null);
+
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 640, height: 480 },
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
       });
-      setStream(mediaStream);
-      setStatus('granted');
-      
+
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
       }
-    } catch (error) {
-      console.error('Camera access denied:', error);
-      setStatus('denied');
+
+      setStatus("granted");
+    } catch {
+      setStatus("denied");
     }
   };
 
-  const handleContinue = () => {
-    if (stream) {
-      onSuccess(stream);
-    }
-  };
-
+  /* 🧠 FACE DETECTION */
   useEffect(() => {
-    return () => {
-      // Don't stop stream here, it will be managed by parent
-    };
-  }, []);
+    if (status !== "granted" || !videoRef.current) return;
+
+    const faceDetection = new FaceDetection({
+      locateFile: (file) =>
+        `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`,
+    });
+
+    faceDetection.setOptions({
+      model: "short",
+      minDetectionConfidence: 0.6,
+    });
+
+    faceDetection.onResults((results) => {
+      if (results.detections.length === 1) {
+        setFaceValid(true);
+        setFaceError(null);
+      } else if (results.detections.length > 1) {
+        setFaceValid(false);
+        setFaceError("Multiple faces detected");
+      } else {
+        setFaceValid(false);
+        setFaceError("No face detected");
+      }
+    });
+
+    const cam = new MPCamera(videoRef.current, {
+      onFrame: async () => {
+        await faceDetection.send({ image: videoRef.current! });
+      },
+      width: 640,
+      height: 480,
+    });
+
+    cam.start();
+  }, [status, restartKey]);
+
+  /* ⏱ AUTO CAPTURE (ONLY IF FACE VALID) */
+  useEffect(() => {
+    if (status !== "granted") return;
+    if (!videoReady) return;
+    if (snapshot) return;
+    if (!faceValid) return;
+
+    setCountdown(3);
+
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === 1) {
+          const img = captureSnapshot();
+          if (img) setSnapshot(img);
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [status, videoReady, faceValid, restartKey]);
+
+  /* 🔁 RETAKE */
+  const handleRetake = async () => {
+    setSnapshot(null);
+    setCountdown(3);
+    setRestartKey((k) => k + 1);
+    setFaceValid(false);
+    setFaceError(null);
+
+    if (videoRef.current) {
+      await videoRef.current.play();
+    }
+  };
+
+  /* ✅ PROCEED */
+  const handleProceed = () => {
+    if (snapshot) onSuccess?.(snapshot);
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-2xl mx-auto"
+      className="max-w-xl mx-auto relative"
     >
-      <div className="bg-card rounded-lg border border-border p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-            <Camera className="h-6 w-6 text-primary" />
+      {/* Face thumbnail */}
+      {snapshot && (
+        <div className="absolute top-0 right-0 z-20">
+          <div className="w-20 h-20 rounded-full border-4 border-green-500 overflow-hidden shadow">
+            <img src={snapshot} className="w-full h-full object-cover" />
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-foreground">Camera Setup</h2>
-            <p className="text-sm text-muted-foreground">Step 1 of 3</p>
-          </div>
+          <p className="text-[10px] text-center text-green-600 mt-1 font-medium">
+            Verified
+          </p>
+        </div>
+      )}
+
+      <div className="bg-card border rounded-lg p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Camera className="h-6 w-6 text-primary" />
+          <h2 className="text-lg font-semibold">Camera Verification</h2>
         </div>
 
-        <div className="aspect-video bg-muted rounded-lg overflow-hidden mb-6 relative">
-          {status === 'idle' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <Camera className="h-16 w-16 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Camera preview will appear here</p>
-            </div>
-          )}
-          {status === 'requesting' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <Loader2 className="h-16 w-16 text-primary mb-4 animate-spin" />
-              <p className="text-muted-foreground">Requesting camera access...</p>
-            </div>
-          )}
-          {status === 'denied' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/10">
-              <XCircle className="h-16 w-16 text-destructive mb-4" />
-              <p className="text-destructive font-medium">Camera access denied</p>
-              <p className="text-sm text-muted-foreground mt-2">Please enable camera in browser settings</p>
-            </div>
-          )}
+        {/* 🔔 Instructions */}
+        <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3">
+          <div className="flex items-center gap-2 text-warning font-semibold mb-1">
+            <AlertTriangle className="h-4 w-4" />
+            Important Instructions
+          </div>
+          <ul className="text-sm list-disc list-inside space-y-1">
+            <li>Sit in a clean background</li>
+            <li>Lighting must be in front of your face</li>
+            <li>Only one face should be visible</li>
+            <li>Do not move during capture</li>
+          </ul>
+        </div>
+
+        {/* Preview */}
+        <div className="aspect-video bg-muted rounded-md relative mb-4 overflow-hidden">
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className={`w-full h-full object-cover ${status === 'granted' ? 'block' : 'hidden'}`}
+            onLoadedMetadata={() => setVideoReady(true)}
+            className={`w-full h-full object-cover ${
+              snapshot ? "opacity-0 absolute" : "opacity-100"
+            }`}
           />
-          {status === 'granted' && (
-            <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-green-500/90 text-white px-3 py-1.5 rounded-full text-sm">
-              <CheckCircle className="h-4 w-4" />
-              Camera Active
+
+          {snapshot && (
+            <img
+              src={snapshot}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+
+          {status === "granted" && !snapshot && faceValid && countdown > 0 && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-1 rounded">
+              ⏳ Capturing in <b>{countdown}</b>
+            </div>
+          )}
+
+          {faceError && status === "granted" && !snapshot && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-red-500 text-white px-3 py-1 rounded text-xs">
+              {faceError}
+            </div>
+          )}
+
+          {status === "idle" && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p>Camera preview</p>
+            </div>
+          )}
+
+          {status === "requesting" && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <Loader2 className="animate-spin" />
+              <p>Requesting camera…</p>
+            </div>
+          )}
+
+          {status === "denied" && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-red-500">
+              <XCircle />
+              <p>Camera denied</p>
             </div>
           )}
         </div>
 
-        <div className="space-y-3">
-          {status === 'idle' && (
-            <Button onClick={requestCamera} className="w-full" size="lg">
-              Enable Camera
+        <canvas ref={canvasRef} className="hidden" />
+
+        {status === "idle" && (
+          <Button onClick={requestCamera} className="w-full">
+            Enable Camera
+          </Button>
+        )}
+
+        {snapshot && (
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={handleRetake} className="w-full">
+              Retake
             </Button>
-          )}
-          {status === 'requesting' && (
-            <Button disabled className="w-full" size="lg">
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Requesting Permission...
+            <Button onClick={handleProceed} className="w-full">
+              Proceed
             </Button>
-          )}
-          {status === 'granted' && (
-            <Button onClick={handleContinue} className="w-full" size="lg">
-              Continue to Microphone Setup
-            </Button>
-          )}
-          {status === 'denied' && (
-            <div className="space-y-2">
-              <Button onClick={requestCamera} variant="outline" className="w-full" size="lg">
-                Try Again
-              </Button>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );
 };
+
+export default CameraSetup;

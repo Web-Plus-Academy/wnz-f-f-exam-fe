@@ -1,410 +1,273 @@
-import { Question } from '@/types/exam';
+import { Question } from "@/types/exam";
 
-export const mathematicsQuestions: Question[] = [
+/* =====================================================
+  1. Logical Thinking & Aptitude
+===================================================== */
+
+export const aptitudeQuestions: Question[] = [
   {
-    id: 'math-1',
-    subject: 'mathematics',
+    id: "apt-1",
+    subject: "aptitude",
     questionNumber: 1,
-    questionText: 'If f(x) = x³ - 3x² + 2x + 1, then the value of f\'(2) is:',
+    questionText:
+      "If all developers are learners and some learners are designers, which statement is definitely true?",
     options: {
-      A: '2',
-      B: '4',
-      C: '6',
-      D: '8',
+      A: "All designers are developers",
+      B: "Some developers may be designers",
+      C: "No developer is a designer",
+      D: "All learners are developers",
     },
-    correctAnswer: 'A',
+    correctAnswer: "B",
   },
   {
-    id: 'math-2',
-    subject: 'mathematics',
+    id: "apt-2",
+    subject: "aptitude",
     questionNumber: 2,
-    questionText: 'The integral ∫(sin²x + cos²x)dx equals:',
+    questionText:
+      "Find the next number in the series: 2, 4, 8, 16, ?",
     options: {
-      A: 'x + C',
-      B: 'sin x + C',
-      C: 'cos x + C',
-      D: '2x + C',
+      A: "18",
+      B: "24",
+      C: "32",
+      D: "30",
     },
-    correctAnswer: 'A',
+    correctAnswer: "C",
   },
   {
-    id: 'math-3',
-    subject: 'mathematics',
+    id: "apt-3",
+    subject: "aptitude",
     questionNumber: 3,
-    questionText: 'If A is a 3×3 matrix and |A| = 5, then |3A| is:',
+    questionText:
+      "Which approach is best to solve a complex problem?",
     options: {
-      A: '15',
-      B: '45',
-      C: '135',
-      D: '125',
+      A: "Guessing the solution",
+      B: "Breaking it into smaller steps",
+      C: "Ignoring edge cases",
+      D: "Copying someone else's solution",
     },
-    correctAnswer: 'C',
+    correctAnswer: "B",
   },
   {
-    id: 'math-4',
-    subject: 'mathematics',
+    id: "apt-4",
+    subject: "aptitude",
     questionNumber: 4,
-    questionText: 'The number of solutions of the equation sin x = x/100 is:',
+    questionText:
+      "If a task takes 5 minutes to complete and is repeated 6 times, what is the total time?",
     options: {
-      A: '31',
-      B: '62',
-      C: '63',
-      D: '64',
+      A: "25 minutes",
+      B: "30 minutes",
+      C: "35 minutes",
+      D: "40 minutes",
     },
-    correctAnswer: 'C',
-  },
-  {
-    id: 'math-5',
-    subject: 'mathematics',
-    questionNumber: 5,
-    questionText: 'If the sum of first n terms of an A.P. is cn², then the sum of squares of these n terms is:',
-    options: {
-      A: 'n(4n² - 1)c²/3',
-      B: 'n(4n² + 1)c²/3',
-      C: 'n(4n² - 1)c²/6',
-      D: 'n(4n² + 1)c²/6',
-    },
-    correctAnswer: 'A',
-  },
-  {
-    id: 'math-6',
-    subject: 'mathematics',
-    questionNumber: 6,
-    questionText: 'The value of lim(x→0) (tan x - sin x)/x³ is:',
-    options: {
-      A: '1/2',
-      B: '1/3',
-      C: '1/4',
-      D: '1/6',
-    },
-    correctAnswer: 'A',
-  },
-  {
-    id: 'math-7',
-    subject: 'mathematics',
-    questionNumber: 7,
-    questionText: 'The general solution of the differential equation dy/dx + y tan x = sec x is:',
-    options: {
-      A: 'y sec x = tan x + C',
-      B: 'y cos x = sin x + C',
-      C: 'y = sin x + C cos x',
-      D: 'y = cos x + C sin x',
-    },
-    correctAnswer: 'C',
-  },
-  {
-    id: 'math-8',
-    subject: 'mathematics',
-    questionNumber: 8,
-    questionText: 'If vectors a = 2i + 3j - k and b = i - 2j + 3k, then a × b is:',
-    options: {
-      A: '7i - 7j - 7k',
-      B: '7i + 7j + 7k',
-      C: '7i - 7j + 7k',
-      D: '-7i + 7j + 7k',
-    },
-    correctAnswer: 'A',
-  },
-  {
-    id: 'math-9',
-    subject: 'mathematics',
-    questionNumber: 9,
-    questionText: 'The probability of getting exactly 3 heads in 5 tosses of a fair coin is:',
-    options: {
-      A: '5/16',
-      B: '5/32',
-      C: '10/32',
-      D: '3/16',
-    },
-    correctAnswer: 'C',
-  },
-  {
-    id: 'math-10',
-    subject: 'mathematics',
-    questionNumber: 10,
-    questionText: 'The eccentricity of the ellipse 9x² + 16y² = 144 is:',
-    options: {
-      A: '√7/4',
-      B: '√7/3',
-      C: '3/4',
-      D: '4/5',
-    },
-    correctAnswer: 'A',
+    correctAnswer: "B",
   },
 ];
 
-export const physicsQuestions: Question[] = [
+/* =====================================================
+  2. Programming Fundamentals (Conceptual)
+===================================================== */
+
+export const programmingQuestions: Question[] = [
   {
-    id: 'phy-1',
-    subject: 'physics',
+    id: "prog-1",
+    subject: "programming",
     questionNumber: 1,
-    questionText: 'A particle moves in a circle of radius 20 cm with a linear speed of 10 m/s. The angular velocity is:',
+    questionText:
+      "What is the purpose of a variable in programming?",
     options: {
-      A: '50 rad/s',
-      B: '100 rad/s',
-      C: '25 rad/s',
-      D: '75 rad/s',
+      A: "To repeat code",
+      B: "To store and reuse data",
+      C: "To design UI",
+      D: "To compile code",
     },
-    correctAnswer: 'A',
+    correctAnswer: "B",
   },
   {
-    id: 'phy-2',
-    subject: 'physics',
+    id: "prog-2",
+    subject: "programming",
     questionNumber: 2,
-    questionText: 'The dimensional formula for Planck\'s constant is:',
+    questionText:
+      "Which statement best describes a loop?",
     options: {
-      A: '[ML²T⁻¹]',
-      B: '[ML²T⁻²]',
-      C: '[MLT⁻¹]',
-      D: '[ML²T⁻³]',
+      A: "Runs code once",
+      B: "Stops program execution",
+      C: "Repeats a block of code",
+      D: "Stores data permanently",
     },
-    correctAnswer: 'A',
+    correctAnswer: "C",
   },
   {
-    id: 'phy-3',
-    subject: 'physics',
+    id: "prog-3",
+    subject: "programming",
     questionNumber: 3,
-    questionText: 'Two charges of +5μC and -5μC are placed 10 cm apart. The electric field at the midpoint is:',
+    questionText:
+      "What does an IF condition do?",
     options: {
-      A: '3.6 × 10⁷ N/C',
-      B: '7.2 × 10⁷ N/C',
-      C: '1.8 × 10⁷ N/C',
-      D: '0 N/C',
+      A: "Repeats code",
+      B: "Checks a condition and makes a decision",
+      C: "Defines a variable",
+      D: "Ends the program",
     },
-    correctAnswer: 'B',
+    correctAnswer: "B",
   },
   {
-    id: 'phy-4',
-    subject: 'physics',
+    id: "prog-4",
+    subject: "programming",
     questionNumber: 4,
-    questionText: 'A 2 kg block is pushed up a rough inclined plane of inclination 30° with the horizontal. If μ = 0.5, the force required is:',
+    questionText:
+      "What is pseudocode mainly used for?",
     options: {
-      A: '10√3 N',
-      B: '10(1 + √3/2) N',
-      C: '5(2 + √3) N',
-      D: '15 N',
+      A: "Writing final code",
+      B: "Designing logic in simple language",
+      C: "Running programs",
+      D: "Styling websites",
     },
-    correctAnswer: 'C',
-  },
-  {
-    id: 'phy-5',
-    subject: 'physics',
-    questionNumber: 5,
-    questionText: 'In Young\'s double slit experiment, if the separation between slits is halved, the fringe width becomes:',
-    options: {
-      A: 'Half',
-      B: 'Double',
-      C: 'Same',
-      D: 'Four times',
-    },
-    correctAnswer: 'B',
-  },
-  {
-    id: 'phy-6',
-    subject: 'physics',
-    questionNumber: 6,
-    questionText: 'The work function of a metal is 2.5 eV. The threshold frequency for photoelectric emission is:',
-    options: {
-      A: '6.0 × 10¹⁴ Hz',
-      B: '5.0 × 10¹⁴ Hz',
-      C: '4.0 × 10¹⁴ Hz',
-      D: '3.0 × 10¹⁴ Hz',
-    },
-    correctAnswer: 'A',
-  },
-  {
-    id: 'phy-7',
-    subject: 'physics',
-    questionNumber: 7,
-    questionText: 'A transformer has 100 turns in primary and 400 turns in secondary. If input voltage is 220V, output voltage is:',
-    options: {
-      A: '55 V',
-      B: '220 V',
-      C: '880 V',
-      D: '440 V',
-    },
-    correctAnswer: 'C',
-  },
-  {
-    id: 'phy-8',
-    subject: 'physics',
-    questionNumber: 8,
-    questionText: 'The escape velocity from Earth\'s surface is 11.2 km/s. For a planet with twice the radius and same density, it is:',
-    options: {
-      A: '11.2 km/s',
-      B: '22.4 km/s',
-      C: '5.6 km/s',
-      D: '15.8 km/s',
-    },
-    correctAnswer: 'B',
-  },
-  {
-    id: 'phy-9',
-    subject: 'physics',
-    questionNumber: 9,
-    questionText: 'In an LC oscillator, if L = 1 mH and C = 1 μF, the frequency of oscillation is:',
-    options: {
-      A: '5.03 kHz',
-      B: '10.06 kHz',
-      C: '15.9 kHz',
-      D: '1.59 kHz',
-    },
-    correctAnswer: 'A',
-  },
-  {
-    id: 'phy-10',
-    subject: 'physics',
-    questionNumber: 10,
-    questionText: 'The de Broglie wavelength of an electron accelerated through 100V is approximately:',
-    options: {
-      A: '1.23 Å',
-      B: '0.123 Å',
-      C: '12.3 Å',
-      D: '0.0123 Å',
-    },
-    correctAnswer: 'A',
+    correctAnswer: "B",
   },
 ];
 
-export const chemistryQuestions: Question[] = [
+/* =====================================================
+  3. Web Basics (Awareness Level)
+===================================================== */
+
+export const webBasicsQuestions: Question[] = [
   {
-    id: 'chem-1',
-    subject: 'chemistry',
+    id: "web-1",
+    subject: "web",
     questionNumber: 1,
-    questionText: 'The hybridization of carbon atoms in graphite is:',
+    questionText:
+      "What is the World Wide Web?",
     options: {
-      A: 'sp',
-      B: 'sp²',
-      C: 'sp³',
-      D: 'dsp²',
+      A: "A programming language",
+      B: "A system of interlinked web pages",
+      C: "A database",
+      D: "An operating system",
     },
-    correctAnswer: 'B',
+    correctAnswer: "B",
   },
   {
-    id: 'chem-2',
-    subject: 'chemistry',
+    id: "web-2",
+    subject: "web",
     questionNumber: 2,
-    questionText: 'The IUPAC name of CH₃-CH=CH-CHO is:',
+    questionText:
+      "Which technology is mainly responsible for structuring web content?",
     options: {
-      A: 'But-2-enal',
-      B: 'But-3-enal',
-      C: '2-Butenal',
-      D: 'Crotonaldehyde',
+      A: "CSS",
+      B: "JavaScript",
+      C: "HTML",
+      D: "React",
     },
-    correctAnswer: 'A',
+    correctAnswer: "C",
   },
   {
-    id: 'chem-3',
-    subject: 'chemistry',
+    id: "web-3",
+    subject: "web",
     questionNumber: 3,
-    questionText: 'Which of the following has the highest lattice energy?',
+    questionText:
+      "What is Frontend development?",
     options: {
-      A: 'NaCl',
-      B: 'MgO',
-      C: 'CaO',
-      D: 'KCl',
+      A: "Server-side logic",
+      B: "Database management",
+      C: "User interface development",
+      D: "Cloud deployment",
     },
-    correctAnswer: 'B',
+    correctAnswer: "C",
   },
   {
-    id: 'chem-4',
-    subject: 'chemistry',
+    id: "web-4",
+    subject: "web",
     questionNumber: 4,
-    questionText: 'The pH of 0.001 M HCl solution is:',
+    questionText:
+      "Which of the following runs in the browser?",
     options: {
-      A: '1',
-      B: '2',
-      C: '3',
-      D: '4',
+      A: "Java",
+      B: "Python",
+      C: "JavaScript",
+      D: "C++",
     },
-    correctAnswer: 'C',
-  },
-  {
-    id: 'chem-5',
-    subject: 'chemistry',
-    questionNumber: 5,
-    questionText: 'In the reaction 2Fe³⁺ + Sn²⁺ → 2Fe²⁺ + Sn⁴⁺, Sn²⁺ acts as:',
-    options: {
-      A: 'Oxidizing agent',
-      B: 'Reducing agent',
-      C: 'Both oxidizing and reducing agent',
-      D: 'Neither',
-    },
-    correctAnswer: 'B',
-  },
-  {
-    id: 'chem-6',
-    subject: 'chemistry',
-    questionNumber: 6,
-    questionText: 'The coordination number in body-centered cubic structure is:',
-    options: {
-      A: '4',
-      B: '6',
-      C: '8',
-      D: '12',
-    },
-    correctAnswer: 'C',
-  },
-  {
-    id: 'chem-7',
-    subject: 'chemistry',
-    questionNumber: 7,
-    questionText: 'Which of the following is a biodegradable polymer?',
-    options: {
-      A: 'PVC',
-      B: 'Polythene',
-      C: 'PHBV',
-      D: 'Teflon',
-    },
-    correctAnswer: 'C',
-  },
-  {
-    id: 'chem-8',
-    subject: 'chemistry',
-    questionNumber: 8,
-    questionText: 'The electron configuration of Cu (Z=29) in ground state is:',
-    options: {
-      A: '[Ar] 3d⁹ 4s²',
-      B: '[Ar] 3d¹⁰ 4s¹',
-      C: '[Ar] 3d⁸ 4s²',
-      D: '[Ar] 3d¹⁰ 4s²',
-    },
-    correctAnswer: 'B',
-  },
-  {
-    id: 'chem-9',
-    subject: 'chemistry',
-    questionNumber: 9,
-    questionText: 'Which reagent is used to distinguish between 1°, 2°, and 3° alcohols?',
-    options: {
-      A: 'Sodium metal',
-      B: 'Lucas reagent',
-      C: 'Fehling solution',
-      D: 'Tollens reagent',
-    },
-    correctAnswer: 'B',
-  },
-  {
-    id: 'chem-10',
-    subject: 'chemistry',
-    questionNumber: 10,
-    questionText: 'The order of reactivity of halogens towards electrophilic substitution is:',
-    options: {
-      A: 'F > Cl > Br > I',
-      B: 'I > Br > Cl > F',
-      C: 'Cl > Br > I > F',
-      D: 'F > I > Br > Cl',
-    },
-    correctAnswer: 'B',
+    correctAnswer: "C",
   },
 ];
+
+/* =====================================================
+  4. Learning Mindset & Ethics
+===================================================== */
+
+export const mindsetQuestions: Question[] = [
+  {
+    id: "mind-1",
+    subject: "mindset",
+    questionNumber: 1,
+    questionText:
+      "If you do not understand a topic, what should you do first?",
+    options: {
+      A: "Quit learning",
+      B: "Ignore it",
+      C: "Ask questions and practice",
+      D: "Copy answers",
+    },
+    correctAnswer: "C",
+  },
+  {
+    id: "mind-2",
+    subject: "mindset",
+    questionNumber: 2,
+    questionText:
+      "Consistency in learning means:",
+    options: {
+      A: "Studying only when motivated",
+      B: "Learning daily with discipline",
+      C: "Studying once a week",
+      D: "Learning only before exams",
+    },
+    correctAnswer: "B",
+  },
+  {
+    id: "mind-3",
+    subject: "mindset",
+    questionNumber: 3,
+    questionText:
+      "What is ethical behavior in a learning community?",
+    options: {
+      A: "Sharing answers in exams",
+      B: "Respecting peers and rules",
+      C: "Ignoring guidelines",
+      D: "Taking shortcuts",
+    },
+    correctAnswer: "B",
+  },
+  {
+    id: "mind-4",
+    subject: "mindset",
+    questionNumber: 4,
+    questionText:
+      "If you fail a test, what is the best response?",
+    options: {
+      A: "Blame others",
+      B: "Give up",
+      C: "Analyze mistakes and improve",
+      D: "Avoid learning",
+    },
+    correctAnswer: "C",
+  },
+];
+
+/* =====================================================
+  Combined Exam Configuration
+===================================================== */
 
 export const allQuestions: Record<string, Question[]> = {
-  mathematics: mathematicsQuestions,
-  physics: physicsQuestions,
-  chemistry: chemistryQuestions,
+  aptitude: aptitudeQuestions,
+  programming: programmingQuestions,
+  web: webBasicsQuestions,
+  mindset: mindsetQuestions,
 };
 
-export const EXAM_DURATION = 3 * 60 * 60; // 3 hours in seconds
-export const TOTAL_QUESTIONS = 30;
-export const QUESTIONS_PER_SUBJECT = 10;
+export const QUESTIONS_PER_SECTION = 4;
+export const TOTAL_QUESTIONS = 16;
+export const EXAM_DURATION = 30 * 60; // 30 minutes
+
+export const EXAM_START_TIME = new Date('2026-01-10T00:00:00+05:30').getTime();
+export const EXAM_END_TIME   = new Date('2026-01-10T24:00:00+05:30').getTime();
+
+

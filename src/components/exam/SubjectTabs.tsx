@@ -1,4 +1,4 @@
-import { Subject } from '@/types/exam';
+import { Subject } from "@/types/exam";
 
 interface SubjectTabsProps {
   currentSubject: Subject;
@@ -6,22 +6,26 @@ interface SubjectTabsProps {
 }
 
 const subjects: { key: Subject; label: string }[] = [
-  { key: 'mathematics', label: 'Mathematics' },
-  { key: 'physics', label: 'Physics' },
-  { key: 'chemistry', label: 'Chemistry' },
+  { key: "aptitude", label: "Aptitude" },
+  { key: "programming", label: "Programming" },
+  { key: "web", label: "Web Basics" },
+  { key: "mindset", label: "Mindset" },
 ];
 
-export const SubjectTabs = ({ currentSubject, onSubjectChange }: SubjectTabsProps) => {
+export const SubjectTabs = ({
+  currentSubject,
+  onSubjectChange,
+}: SubjectTabsProps) => {
   return (
-    <div className="flex bg-panel-bg border-b border-panel-border">
+    <div className="flex bg-panel-bg border-b border-panel-border overflow-x-auto">
       {subjects.map((subject) => (
         <button
           key={subject.key}
           onClick={() => onSubjectChange(subject.key)}
           className={`subject-tab ${
-            currentSubject === subject.key 
-              ? 'subject-tab-active' 
-              : 'subject-tab-inactive'
+            currentSubject === subject.key
+              ? "subject-tab-active"
+              : "subject-tab-inactive"
           }`}
         >
           {subject.label}

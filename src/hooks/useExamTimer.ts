@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from './useAppDispatch';
 import { updateTimer, submitExam } from '@/store/examSlice';
+import { EXAM_DURATION } from '@/data/questions';
 
 export const useExamTimer = () => {
   const dispatch = useAppDispatch();
@@ -11,7 +12,7 @@ export const useExamTimer = () => {
 
     const interval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const remaining = Math.max(0, 3 * 60 * 60 - elapsed); // 3 hours in seconds
+      const remaining = Math.max(0, EXAM_DURATION - elapsed);
       
       dispatch(updateTimer(remaining));
 
