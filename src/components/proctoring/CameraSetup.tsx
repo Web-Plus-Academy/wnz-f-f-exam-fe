@@ -66,50 +66,75 @@ export const CameraSetup = ({ onSuccess }: CameraSetupProps) => {
     }
   };
 
-/* 🧠 FACE DETECTION */
+/* 🧠 PRODUCTION SAFE FACE DETECTION */
 useEffect(() => {
   if (status !== "granted" || !videoRef.current) return;
 
-  // FIX: Access the class through the imported namespace
-  const faceDetectionInstance = new faceDetection.FaceDetection({
-    locateFile: (file) =>
-      `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`,
-  });
+  let camera: any = null;
+  let detector: any = null;
 
-  faceDetectionInstance.setOptions({
-    model: "short",
-    minDetectionConfidence: 0.6,
-  });
+  const startAI = async () => {
+    try {
+      /**
+       * 🛠️ THE FIX: Safe Constructor Access
+       * In production builds, the class might be under .FaceDetection 
+       * or the object itself. This prevents the "not a constructor" error.
+       */
+      const FD_Class = (faceDetection as any).FaceDetection || 
+                       (faceDetection as any).default?.FaceDetection || 
+                       faceDetection;
 
-  faceDetectionInstance.onResults((results) => {
-    if (results.detections && results.detections.length === 1) {
-      setFaceValid(true);
-      setFaceError(null);
-    } else if (results.detections && results.detections.length > 1) {
-      setFaceValid(false);
-      setFaceError("Multiple faces detected");
-    } else {
-      setFaceValid(false);
-      setFaceError("No face detected");
+      detector = new FD_Class({
+        locateFile: (file: string) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`;
+        },
+      });
+
+      detector.setOptions({
+        model: "short",
+        minDetectionConfidence: 0.6,
+      });
+
+      detector.onResults((results: any) => {
+        if (results.detections && results.detections.length === 1) {
+          setFaceValid(true);
+          setFaceError(null);
+        } else if (results.detections && results.detections.length > 1) {
+          setFaceValid(false);
+          setFaceError("Multiple faces detected");
+        } else {
+          setFaceValid(false);
+          setFaceError("No face detected");
+        }
+      });
+
+      // Safe access for the Camera class
+      const Cam_Class = (camUtils as any).Camera || 
+                        (camUtils as any).default?.Camera || 
+                        camUtils;
+
+      camera = new Cam_Class(videoRef.current!, {
+        onFrame: async () => {
+          if (videoRef.current) {
+            await detector.send({ image: videoRef.current });
+          }
+        },
+        width: 640,
+        height: 480,
+      });
+
+      await camera.start();
+    } catch (err) {
+      console.error("Netlify AI Error:", err);
+      setFaceError("Security AI failed to initialize");
     }
-  });
+  };
 
-  // FIX: Access MPCamera through the camUtils namespace
-  const cam = new camUtils.Camera(videoRef.current, {
-    onFrame: async () => {
-      // Use the instance created above
-      await faceDetectionInstance.send({ image: videoRef.current! });
-    },
-    width: 640,
-    height: 480,
-  });
+  startAI();
 
-  cam.start();
-
-  // Cleanup to prevent memory leaks and multiple instances
   return () => {
-    cam.stop();
-    faceDetectionInstance.close();
+    if (camera) camera.stop();
+    if (detector) detector.close();
   };
 }, [status, restartKey]);
 
