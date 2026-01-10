@@ -66,7 +66,7 @@ export const CameraSetup = ({ onSuccess }: CameraSetupProps) => {
     }
   };
 
-/* 🧠 PRODUCTION SAFE FACE DETECTION */
+/* 🧠 PRODUCTION-READY FACE DETECTION */
 useEffect(() => {
   if (status !== "granted" || !videoRef.current) return;
 
@@ -76,13 +76,18 @@ useEffect(() => {
   const startAI = async () => {
     try {
       /**
-       * 🛠️ THE FIX: Safe Constructor Access
-       * In production builds, the class might be under .FaceDetection 
-       * or the object itself. This prevents the "not a constructor" error.
+       * 🛠️ THE CRITICAL FIX:
+       * We access the constructor via a string key or the default export.
+       * This prevents Vite/Netlify minifiers from breaking the 'new' call.
        */
-      const FD_Class = (faceDetection as any).FaceDetection || 
-                       (faceDetection as any).default?.FaceDetection || 
-                       faceDetection;
+      const FaceDetectionModule = faceDetection as any;
+      const FD_Class = FaceDetectionModule.FaceDetection || 
+                       FaceDetectionModule.default?.FaceDetection || 
+                       FaceDetectionModule;
+
+      if (typeof FD_Class !== 'function') {
+        throw new Error("FaceDetection constructor not found");
+      }
 
       detector = new FD_Class({
         locateFile: (file: string) => {
@@ -108,14 +113,15 @@ useEffect(() => {
         }
       });
 
-      // Safe access for the Camera class
-      const Cam_Class = (camUtils as any).Camera || 
-                        (camUtils as any).default?.Camera || 
-                        camUtils;
+      // Similar safe access for the Camera class
+      const CamModule = camUtils as any;
+      const Cam_Class = CamModule.Camera || 
+                        CamModule.default?.Camera || 
+                        CamModule;
 
       camera = new Cam_Class(videoRef.current!, {
         onFrame: async () => {
-          if (videoRef.current) {
+          if (videoRef.current && detector) {
             await detector.send({ image: videoRef.current });
           }
         },
@@ -125,7 +131,7 @@ useEffect(() => {
 
       await camera.start();
     } catch (err) {
-      console.error("Netlify AI Error:", err);
+      console.error("AI Initialization failed:", err);
       setFaceError("Security AI failed to initialize");
     }
   };
