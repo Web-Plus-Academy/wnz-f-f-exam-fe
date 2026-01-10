@@ -76,21 +76,23 @@ useEffect(() => {
   const startAI = async () => {
     try {
       /**
-       * 🛠️ THE CRITICAL FIX:
-       * We access the constructor via a string key or the default export.
-       * This prevents Vite/Netlify minifiers from breaking the 'new' call.
+       * 🛠️ THE CRITICAL FIX FOR NETLIFY:
+       * We search for the constructor within the module because minifiers
+       * like Vite's 'I' often hide it.
        */
-      const FaceDetectionModule = faceDetection as any;
-      const FD_Class = FaceDetectionModule.FaceDetection || 
-                       FaceDetectionModule.default?.FaceDetection || 
-                       FaceDetectionModule;
+      const FD_Module = faceDetection as any;
+      const FaceDetectionClass = 
+        FD_Module.FaceDetection || 
+        FD_Module.default?.FaceDetection || 
+        FD_Module;
 
-      if (typeof FD_Class !== 'function') {
-        throw new Error("FaceDetection constructor not found");
+      if (typeof FaceDetectionClass !== 'function') {
+        throw new Error("FaceDetection constructor not found after checking all exports");
       }
 
-      detector = new FD_Class({
+      detector = new FaceDetectionClass({
         locateFile: (file: string) => {
+          // Absolute path ensures WASM files load correctly on deployed URLs
           return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`;
         },
       });
@@ -113,13 +115,14 @@ useEffect(() => {
         }
       });
 
-      // Similar safe access for the Camera class
-      const CamModule = camUtils as any;
-      const Cam_Class = CamModule.Camera || 
-                        CamModule.default?.Camera || 
-                        CamModule;
+      // Similar safe access for the Camera utility
+      const Cam_Module = camUtils as any;
+      const CameraClass = 
+        Cam_Module.Camera || 
+        Cam_Module.default?.Camera || 
+        Cam_Module;
 
-      camera = new Cam_Class(videoRef.current!, {
+      camera = new CameraClass(videoRef.current!, {
         onFrame: async () => {
           if (videoRef.current && detector) {
             await detector.send({ image: videoRef.current });
@@ -132,12 +135,14 @@ useEffect(() => {
       await camera.start();
     } catch (err) {
       console.error("AI Initialization failed:", err);
+      // This matches the red error label in your screenshot
       setFaceError("Security AI failed to initialize");
     }
   };
 
   startAI();
 
+  // 🧹 Cleanup to prevent duplicate processes
   return () => {
     if (camera) camera.stop();
     if (detector) detector.close();
