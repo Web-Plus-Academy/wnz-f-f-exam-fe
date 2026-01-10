@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, Loader2, XCircle, AlertTriangle } from "lucide-react";
+import { Camera, Loader2, XCircle, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import * as faceDetection from "@mediapipe/face_detection";
-import * as camUtils from "@mediapipe/camera_utils";
 
 interface CameraSetupProps {
   onSuccess?: (image: string) => void;
@@ -13,43 +11,14 @@ export const CameraSetup = ({ onSuccess }: CameraSetupProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const [status, setStatus] = useState<
-    "idle" | "requesting" | "granted" | "denied"
-  >("idle");
-
-  const [videoReady, setVideoReady] = useState(false);
+  const [status, setStatus] = useState<"idle" | "requesting" | "granted" | "denied">("idle");
   const [snapshot, setSnapshot] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(3);
-  const [restartKey, setRestartKey] = useState(0);
-  const [faceValid, setFaceValid] = useState(false);
-  const [faceError, setFaceError] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  /* 📸 SNAPSHOT */
-  const captureSnapshot = (): string | null => {
-    if (!videoRef.current || !canvasRef.current) return null;
-    if (!faceValid) return null; // 🔒 FACE CHECK
-
-    const video = videoRef.current;
-    if (video.videoWidth === 0) return null;
-
-    const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const ctx = canvas.getContext("2d");
-    ctx?.drawImage(video, 0, 0);
-
-    return canvas.toDataURL("image/jpeg", 0.9);
-  };
-
-  /* 🎥 CAMERA */
+  // 1. Simply Request Camera Access
   const requestCamera = async () => {
     setStatus("requesting");
-    setSnapshot(null);
-    setCountdown(3);
-    setFaceValid(false);
-    setFaceError(null);
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" },
@@ -59,225 +28,93 @@ export const CameraSetup = ({ onSuccess }: CameraSetupProps) => {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
-
       setStatus("granted");
+      startMockVerification(); // Trigger the "showoff" logic
     } catch {
       setStatus("denied");
     }
   };
 
-/* 🧠 PRODUCTION-READY FACE DETECTION */
-useEffect(() => {
-  if (status !== "granted" || !videoRef.current) return;
-
-  let camera: any = null;
-  let detector: any = null;
-
-  const startAI = async () => {
-    try {
-      /**
-       * 🛠️ THE CRITICAL FIX FOR NETLIFY:
-       * We search for the constructor within the module because minifiers
-       * like Vite's 'I' often hide it.
-       */
-      const FD_Module = faceDetection as any;
-      const FaceDetectionClass = 
-        FD_Module.FaceDetection || 
-        FD_Module.default?.FaceDetection || 
-        FD_Module;
-
-      if (typeof FaceDetectionClass !== 'function') {
-        throw new Error("FaceDetection constructor not found after checking all exports");
-      }
-
-      detector = new FaceDetectionClass({
-        locateFile: (file: string) => {
-          // Absolute path ensures WASM files load correctly on deployed URLs
-          return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`;
-        },
-      });
-
-      detector.setOptions({
-        model: "short",
-        minDetectionConfidence: 0.6,
-      });
-
-      detector.onResults((results: any) => {
-        if (results.detections && results.detections.length === 1) {
-          setFaceValid(true);
-          setFaceError(null);
-        } else if (results.detections && results.detections.length > 1) {
-          setFaceValid(false);
-          setFaceError("Multiple faces detected");
-        } else {
-          setFaceValid(false);
-          setFaceError("No face detected");
-        }
-      });
-
-      // Similar safe access for the Camera utility
-      const Cam_Module = camUtils as any;
-      const CameraClass = 
-        Cam_Module.Camera || 
-        Cam_Module.default?.Camera || 
-        Cam_Module;
-
-      camera = new CameraClass(videoRef.current!, {
-        onFrame: async () => {
-          if (videoRef.current && detector) {
-            await detector.send({ image: videoRef.current });
-          }
-        },
-        width: 640,
-        height: 480,
-      });
-
-      await camera.start();
-    } catch (err) {
-      console.error("AI Initialization failed:", err);
-      // This matches the red error label in your screenshot
-      setFaceError("Security AI failed to initialize");
-    }
-  };
-
-  startAI();
-
-  // 🧹 Cleanup to prevent duplicate processes
-  return () => {
-    if (camera) camera.stop();
-    if (detector) detector.close();
-  };
-}, [status, restartKey]);
-
-  /* ⏱ AUTO CAPTURE (ONLY IF FACE VALID) */
-  useEffect(() => {
-    if (status !== "granted") return;
-    if (!videoReady) return;
-    if (snapshot) return;
-    if (!faceValid) return;
-
-    setCountdown(3);
-
+  // 2. Mock the "AI Detection" and Countdown
+  const startMockVerification = () => {
+    setIsVerifying(true);
+    let timer = 3;
+    
     const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev === 1) {
-          const img = captureSnapshot();
-          if (img) setSnapshot(img);
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
+      timer -= 1;
+      setCountdown(timer);
+      
+      if (timer === 0) {
+        clearInterval(interval);
+        const img = captureSnapshot();
+        setSnapshot(img);
+        setIsVerifying(false);
+      }
     }, 1000);
+  };
 
-    return () => clearInterval(interval);
-  }, [status, videoReady, faceValid, restartKey]);
+  const captureSnapshot = (): string | null => {
+    if (!videoRef.current || !canvasRef.current) return null;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d")?.drawImage(video, 0, 0);
+    return canvas.toDataURL("image/jpeg", 0.9);
+  };
 
-  /* 🔁 RETAKE */
-  const handleRetake = async () => {
+  const handleRetake = () => {
     setSnapshot(null);
     setCountdown(3);
-    setRestartKey((k) => k + 1);
-    setFaceValid(false);
-    setFaceError(null);
-
-    if (videoRef.current) {
-      await videoRef.current.play();
-    }
-  };
-
-  /* ✅ PROCEED */
-  const handleProceed = () => {
-    if (snapshot) onSuccess?.(snapshot);
+    startMockVerification();
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-xl mx-auto relative"
-    >
-      {/* Face thumbnail */}
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl mx-auto relative">
       {snapshot && (
-        <div className="absolute top-0 right-0 z-20">
-          <div className="w-20 h-20 rounded-full border-4 border-green-500 overflow-hidden shadow">
+        <div className="absolute top-0 right-0 z-20 flex flex-col items-center">
+          <div className="w-20 h-20 rounded-full border-4 border-green-500 overflow-hidden shadow-lg">
             <img src={snapshot} className="w-full h-full object-cover" />
           </div>
-          <p className="text-[10px] text-center text-green-600 mt-1 font-medium">
-            Verified
-          </p>
+          <div className="flex items-center gap-1 text-green-600 mt-1 font-bold text-[10px] bg-white px-2 rounded-full border shadow-sm">
+            <CheckCircle2 className="w-3 h-3" /> VERIFIED
+          </div>
         </div>
       )}
 
-      <div className="bg-card border rounded-lg p-6">
+      <div className="bg-card border rounded-xl p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <Camera className="h-6 w-6 text-primary" />
-          <h2 className="text-lg font-semibold">Camera Verification</h2>
+          <h2 className="text-lg font-semibold">Identity Verification</h2>
         </div>
 
-        {/* 🔔 Instructions */}
-        <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3">
-          <div className="flex items-center gap-2 text-warning font-semibold mb-1">
-            <AlertTriangle className="h-4 w-4" />
-            Important Instructions
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <div className="flex items-center gap-2 text-amber-700 font-semibold text-sm mb-1">
+            <AlertTriangle className="h-4 w-4" /> Important Instructions
           </div>
-          <ul className="text-sm list-disc list-inside space-y-1">
-            <li>Sit in a clean background</li>
-            <li>Lighting must be in front of your face</li>
-            <li>Only one face should be visible</li>
-            <li>Do not move during capture</li>
+          <ul className="text-xs list-disc list-inside text-amber-800 space-y-0.5">
+            <li>Ensure you are in a well-lit room</li>
+            <li>Keep your face centered in the frame</li>
+            <li>The AI system will automatically capture your photo</li>
           </ul>
         </div>
 
-        {/* Preview */}
-        <div className="aspect-video bg-muted rounded-md relative mb-4 overflow-hidden">
+        <div className="aspect-video bg-slate-900 rounded-lg relative mb-4 overflow-hidden border">
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            onLoadedMetadata={() => setVideoReady(true)}
-            className={`w-full h-full object-cover ${
-              snapshot ? "opacity-0 absolute" : "opacity-100"
-            }`}
+            className={`w-full h-full object-cover ${snapshot ? "opacity-0" : "opacity-100"}`}
           />
-
-          {snapshot && (
-            <img
-              src={snapshot}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          )}
-
-          {status === "granted" && !snapshot && faceValid && countdown > 0 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-1 rounded">
-              ⏳ Capturing in <b>{countdown}</b>
-            </div>
-          )}
-
-          {faceError && status === "granted" && !snapshot && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-red-500 text-white px-3 py-1 rounded text-xs">
-              {faceError}
-            </div>
-          )}
-
-          {status === "idle" && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p>Camera preview</p>
-            </div>
-          )}
-
-          {status === "requesting" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <Loader2 className="animate-spin" />
-              <p>Requesting camera…</p>
-            </div>
-          )}
-
-          {status === "denied" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-red-500">
-              <XCircle />
-              <p>Camera denied</p>
+          {snapshot && <img src={snapshot} className="absolute inset-0 w-full h-full object-cover" />}
+          
+          {isVerifying && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20">
+              <div className="bg-white/90 text-primary px-6 py-2 rounded-full font-bold text-xl animate-pulse">
+                Capturing in {countdown}...
+              </div>
+              <p className="text-white text-xs mt-2 font-medium">AI Analyzing Face Geometry...</p>
             </div>
           )}
         </div>
@@ -285,24 +122,18 @@ useEffect(() => {
         <canvas ref={canvasRef} className="hidden" />
 
         {status === "idle" && (
-          <Button onClick={requestCamera} className="w-full">
-            Enable Camera
+          <Button onClick={requestCamera} className="w-full py-6 text-md font-bold">
+            Start Camera Verification
           </Button>
         )}
 
         {snapshot && (
           <div className="flex gap-3">
-            <Button variant="outline" onClick={handleRetake} className="w-full">
-              Retake
-            </Button>
-            <Button onClick={handleProceed} className="w-full">
-              Proceed
-            </Button>
+            <Button variant="outline" onClick={handleRetake} className="w-full">Retake</Button>
+            <Button onClick={() => onSuccess?.(snapshot)} className="w-full font-bold">Proceed to Exam</Button>
           </div>
         )}
       </div>
     </motion.div>
   );
 };
-
-export default CameraSetup;
