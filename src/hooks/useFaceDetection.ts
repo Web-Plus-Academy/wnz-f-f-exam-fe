@@ -15,7 +15,7 @@ export const useFaceDetection = (
   const loadModels = useCallback(async () => {
     if (modelsLoadedRef.current) return true;
     try {
-      // Using reliable CDN for models
+      // Direct CDN link to models
       const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
       await Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
@@ -24,7 +24,7 @@ export const useFaceDetection = (
       modelsLoadedRef.current = true;
       return true;
     } catch (error) {
-      console.error('Face-api models failed to load:', error);
+      console.error('Face detection models failed to load:', error);
       return false;
     }
   }, []);
@@ -46,21 +46,21 @@ export const useFaceDetection = (
         if (faceCount === 0) {
           dispatch(addWarning({
             type: 'face_not_detected',
-            message: 'No face detected. Stay within camera view.',
+            message: 'Face not detected. Stay in camera view.',
             severity: 'medium',
           }));
           lastWarningRef.current = now;
         } else if (faceCount > 1) {
           dispatch(addWarning({
             type: 'multiple_faces',
-            message: 'Multiple people detected in frame.',
+            message: 'Multiple persons detected.',
             severity: 'high',
           }));
           lastWarningRef.current = now;
         }
       }
     } catch (error) {
-      console.warn('Detection frame skipped');
+      // Silently catch frame errors to prevent app crash
     }
   }, [dispatch, videoRef]);
 
@@ -69,9 +69,11 @@ export const useFaceDetection = (
       if (intervalRef.current) clearInterval(intervalRef.current);
       return;
     }
+
     loadModels().then((loaded) => {
       if (loaded) intervalRef.current = setInterval(detectFaces, 2000);
     });
+
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isActive, loadModels, detectFaces]);
 
