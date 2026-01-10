@@ -17,7 +17,7 @@ import {
   previousQuestion, 
   submitExam 
 } from "@/store/examSlice";
-import { allQuestions } from "@/data/questions";
+import { allQuestions, TOTAL_QUESTIONS } from "@/data/questions";
 
 // Components
 import { ExamHeader } from "@/components/exam/ExamHeader";
@@ -49,7 +49,6 @@ const ExamPage = () => {
   ===================================================== */
   useEffect(() => {
     if (isAutoSubmitted) {
-      // Secure the data immediately in the background
       dispatch(submitExam());
     }
   }, [isAutoSubmitted, dispatch]);
@@ -93,18 +92,41 @@ const ExamPage = () => {
   if (!hasReadInstructions) return <Navigate to="/instructions" replace />;
   if (!setupCompleted) return <Navigate to="/proctoring-setup" replace />;
 
+  /* =====================================================
+      DYNAMIC SUBJECT LOGIC
+  ===================================================== */
+  const subjects = Object.keys(allQuestions);
   const currentSubject = examState.currentSubject;
   const currentSubjectState = examState.subjects[currentSubject];
   const currentQuestionIndex = currentSubjectState.currentQuestionIndex;
+  
   const currentQuestion = allQuestions[currentSubject][currentQuestionIndex];
   const currentQuestionState = currentSubjectState.questions[currentQuestionIndex];
+
+  /* =====================================================
+     GLOBAL NAVIGATION LOGIC
+     =====================================================
+     These variables determine if the navigation buttons 
+     should be disabled at the absolute start/end of the exam.
+  */
+  const isFirstSubject = currentSubject === subjects[0];
+  const isLastSubject = currentSubject === subjects[subjects.length - 1];
+  
+  const isFirstQuestionInSubject = currentQuestionIndex === 0;
+  const isLastQuestionInSubject = currentQuestionIndex === allQuestions[currentSubject].length - 1;
+
+  // Disable "Previous" only on the first question of the first subject
+  const isFirstQuestionGlobal = isFirstSubject && isFirstQuestionInSubject;
+  
+  // Disable "Next" only on the last question of the last subject
+  const isLastQuestionGlobal = isLastSubject && isLastQuestionInSubject;
 
   const calculateStats = () => {
     let answered = 0;
     Object.values(examState.subjects).forEach(s => 
       s.questions.forEach(q => { if(q.status.includes('answered')) answered++; })
     );
-    return { total: 30, answered, notAnswered: 30 - answered, marked: 0, notVisited: 0 };
+    return { total: TOTAL_QUESTIONS, answered, notAnswered: TOTAL_QUESTIONS - answered, marked: 0, notVisited: 0 };
   };
 
   return (
@@ -135,8 +157,8 @@ const ExamPage = () => {
             onMarkForReview={() => dispatch(markForReview())}
             onPrevious={() => dispatch(previousQuestion())}
             onSubmit={() => setShowSubmitModal(true)}
-            isFirstQuestion={currentQuestionIndex === 0}
-            isLastQuestion={currentQuestionIndex === currentSubjectState.questions.length - 1}
+            isFirstQuestion={isFirstQuestionGlobal} // Now works across subjects
+            isLastQuestionOfLastSubject={isLastQuestionGlobal}
           />
         </div>
 
@@ -158,12 +180,9 @@ const ExamPage = () => {
         stats={calculateStats()} 
       />
 
-      {/* Proctoring UI Layers */}
       <LiveIndicators />
       <CameraPreview stream={cameraStream} />
       <WarningModal /> 
-
-      {/* 🚨 THE PROFESSIONAL TERMINATION MESSAGE */}
       <TerminationModal isOpen={isAutoSubmitted} />
     </div>
   );

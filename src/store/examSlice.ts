@@ -77,23 +77,43 @@ const examSlice = createSlice({
         action.payload.option;
     },
 
+    // saveAndNext: (state) => {
+    //   const subject = state.currentSubject;
+    //   const subjectState = state.subjects[subject];
+    //   const index = subjectState.currentQuestionIndex;
+    //   const question = subjectState.questions[index];
+
+    //   if (question.selectedOption) {
+    //     question.status =
+    //       question.status === "marked" ? "marked-answered" : "answered";
+    //   }
+
+    //   if (index < subjectState.questions.length - 1) {
+    //     subjectState.currentQuestionIndex += 1;
+    //     const nextQuestion =
+    //       subjectState.questions[subjectState.currentQuestionIndex];
+    //     if (nextQuestion.status === "not-visited") {
+    //       nextQuestion.status = "visited";
+    //     }
+    //   }
+    // },
+
     saveAndNext: (state) => {
-      const subject = state.currentSubject;
-      const subjectState = state.subjects[subject];
-      const index = subjectState.currentQuestionIndex;
-      const question = subjectState.questions[index];
+      const currentSub = state.currentSubject;
+      const subState = state.subjects[currentSub];
+      const questionsInSub = allQuestions[currentSub].length;
 
-      if (question.selectedOption) {
-        question.status =
-          question.status === "marked" ? "marked-answered" : "answered";
-      }
+      if (subState.currentQuestionIndex < questionsInSub - 1) {
+        // Just go to next question in same subject
+        subState.currentQuestionIndex += 1;
+      } else {
+        // Jump to next subject
+        const subjects = Object.keys(allQuestions);
+        const currentIdx = subjects.indexOf(currentSub);
 
-      if (index < subjectState.questions.length - 1) {
-        subjectState.currentQuestionIndex += 1;
-        const nextQuestion =
-          subjectState.questions[subjectState.currentQuestionIndex];
-        if (nextQuestion.status === "not-visited") {
-          nextQuestion.status = "visited";
+        if (currentIdx < subjects.length - 1) {
+          state.currentSubject = subjects[currentIdx + 1] as Subject;
+          state.subjects[state.currentSubject].currentQuestionIndex = 0;
         }
       }
     },
@@ -134,10 +154,25 @@ const examSlice = createSlice({
     },
 
     previousQuestion: (state) => {
-      const subject = state.currentSubject;
-      const subjectState = state.subjects[subject];
-      if (subjectState.currentQuestionIndex > 0) {
-        subjectState.currentQuestionIndex -= 1;
+      const currentSub = state.currentSubject;
+      const subState = state.subjects[currentSub];
+
+      if (subState.currentQuestionIndex > 0) {
+        // 1. Move to previous question in the current subject
+        subState.currentQuestionIndex -= 1;
+      } else {
+        // 2. We are at index 0, find the previous subject in order
+        const subjectsOrder: Subject[] = ["aptitude", "programming", "web", "mindset"];
+        const currentSubIdx = subjectsOrder.indexOf(currentSub);
+
+        if (currentSubIdx > 0) {
+          const prevSubject = subjectsOrder[currentSubIdx - 1];
+          state.currentSubject = prevSubject;
+
+          // 3. Set index to the LAST question of that previous subject
+          // allQuestions[prevSubject].length - 1 ensures we land at the end of the previous list
+          state.subjects[prevSubject].currentQuestionIndex = allQuestions[prevSubject].length - 1;
+        }
       }
     },
 
