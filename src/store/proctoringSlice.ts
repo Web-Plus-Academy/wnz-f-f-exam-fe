@@ -3,10 +3,10 @@ import { ProctoringState, ProctoringWarning } from '@/types/proctoring';
 
 // Define strict proctoring limits
 const LIMITS = {
-  TOTAL_WARNINGS: 2000,
-  NOISE: 1000,
-  FACE_OFF: 500,
-  TAB_SWITCH: 500,
+  TOTAL_WARNINGS: 20,
+  NOISE: 10,
+  FACE_OFF: 5,
+  TAB_SWITCH: 5,
 };
 
 interface ExtendedProctoringState extends ProctoringState {

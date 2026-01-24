@@ -74,21 +74,22 @@ const InstructionsPage = () => {
       {/* Header */}
       <header className="bg-exam-header text-exam-header-foreground border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          {/* Left: Logo + Title */}
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-md">
+            <div className="w-20 h-20 flex items-center justify-center shadow-md">
               <img
-                src="https://webnexzfoundation.saredufywpa.in/public/logo.png"
+                src="./public/favicon.ico"
                 alt="WebNexZ Foundation"
-                className="w-16 h-16 object-contain"
+                className="w-20 h-20 object-contain"
               />
             </div>
 
             <div>
               <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-                WebNexZ Foundation
+                SW-CET 2026
               </h1>
               <p className="text-sm md:text-base text-white/80">
-                Fellowship Entrance & Scholarship Examination
+                Saredufy - WebNexZ Common Entrance Test
               </p>
               <p className="text-xs text-white/60 mt-0.5">
                 Powered by{" "}
@@ -99,11 +100,12 @@ const InstructionsPage = () => {
             </div>
           </div>
 
+          {/* Right: CBT + Date */}
           <div className="hidden md:flex flex-col items-end text-right">
             <span className="text-sm font-semibold text-white">
               Computer Based Test (CBT)
             </span>
-            <span className="text-sm text-white/80">March 26, 2026</span>
+            <span className="text-sm text-white/80">January 28, 2026</span>
             <span className="text-xs text-green-400 font-medium mt-0.5">
               AI-Proctored • Secure Examination
             </span>

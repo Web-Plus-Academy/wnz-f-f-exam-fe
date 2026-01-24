@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LogIn, Calendar, Hash, AlertCircle } from "lucide-react";
+import { LogIn, Calendar, Hash, AlertCircle, Loader } from "lucide-react";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { login } from "@/store/authSlice";
 import { EXAM_START_TIME, EXAM_END_TIME } from "@/data/questions";
+// import { userData } from "@/data/userdata";
+import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -12,14 +15,11 @@ const LoginPage = () => {
 
   const [applicationNumber, setApplicationNumber] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
-  const [errors, setErrors] = useState<{ application?: string; dob?: string }>(
-    {}
-  );
-
-  // const now = Date.now();
-
-  // const examNotStarted = now < EXAM_START_TIME;
-  // const examClosed = now > EXAM_END_TIME;
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{
+    application?: string;
+    dob?: string;
+  }>({});
 
   const [now, setNow] = useState(Date.now());
 
@@ -54,9 +54,6 @@ const LoginPage = () => {
     ? Math.max(0, Math.floor((EXAM_START_TIME - now) / 1000))
     : Math.max(0, Math.floor((EXAM_END_TIME - now) / 1000));
 
-  // const examNotStarted = now < EXAM_START_TIME;
-  // const examClosed = now > EXAM_END_TIME;
-
   const validateForm = () => {
     const newErrors: { application?: string; dob?: string } = {};
 
@@ -72,45 +69,88 @@ const LoginPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (examNotStarted || examClosed) return;
 
     if (!validateForm()) return;
 
-    dispatch(
-      login({
-        applicationNumber,
-        dateOfBirth,
-        name: "Candidate Name",
-      })
-    );
+     setLoading(true);   // 🔥 START LOADER
 
-    navigate("/instructions");
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/exam-users/login`,
+        {
+          applicationNumber: applicationNumber.trim(),
+          dob: dateOfBirth,
+        },
+      );
+
+      const user = response.data.user;
+
+      // 🚫 If already submitted
+      if (user.isSubmitted) {
+        setLoading(false);
+        setErrors({
+          application: "Exam Already Submitted for this Application Number",
+        });
+        return;
+      }
+
+      // 🚫 If terminated
+      if (user.terminated) {
+        setLoading(false);
+        setErrors({
+          application: "Your exam has been terminated. Contact support.",
+        });
+        return;
+      }
+
+      // ✅ SUCCESS LOGIN
+      dispatch(
+        login({
+          applicationNumber: user.applicationNumber,
+          dateOfBirth: user.dob,
+          name: user.name,
+        }),
+      );
+
+      localStorage.setItem("examUser", JSON.stringify(user));
+      navigate("/instructions");
+    } catch (error: any) {
+      setLoading(false);
+      setErrors({
+        application:
+          error.response?.data?.message ||
+          "Invalid Application Number or Date of Birth",
+      });
+    }
   };
 
   return (
+    <>
+    {loading && <Loader />}
     <div className="min-h-screen bg-gradient-to-br from-panel-bg to-background flex flex-col">
       {/* Header */}
       <header className="bg-exam-header text-exam-header-foreground border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Left: Logo + Title */}
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-md">
+            <div className="w-20 h-20 flex items-center justify-center shadow-md">
               <img
-                src="https://webnexzfoundation.saredufywpa.in/public/logo.png"
+                src="./public/favicon.ico"
                 alt="WebNexZ Foundation"
-                className="w-16 h-16 object-contain"
+                className="w-20 h-20 object-contain"
               />
             </div>
 
             <div>
               <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-                WebNexZ Foundation
+                SW-CET 2026
               </h1>
               <p className="text-sm md:text-base text-white/80">
-                Fellowship Entrance & Scholarship Examination
+                Saredufy - WebNexZ Common Entrance Test
               </p>
               <p className="text-xs text-white/60 mt-0.5">
                 Powered by{" "}
@@ -126,7 +166,7 @@ const LoginPage = () => {
             <span className="text-sm font-semibold text-white">
               Computer Based Test (CBT)
             </span>
-            <span className="text-sm text-white/80">March 26, 2026</span>
+            <span className="text-sm text-white/80">January 28, 2026</span>
             <span className="text-xs text-green-400 font-medium mt-0.5">
               AI-Proctored • Secure Examination
             </span>
@@ -206,7 +246,7 @@ const LoginPage = () => {
               {/* Application Number */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Application Number / Hall Ticket Number
+                  Application Number
                 </label>
                 <div className="relative">
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -214,7 +254,7 @@ const LoginPage = () => {
                     type="text"
                     value={applicationNumber}
                     onChange={(e) => setApplicationNumber(e.target.value)}
-                    placeholder="Enter Application / Hall Ticket Number"
+                    placeholder="Enter Application Number"
                     className={`w-full pl-10 pr-4 py-3 rounded-lg border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all ${
                       errors.application ? "border-destructive" : "border-input"
                     }`}
@@ -289,7 +329,7 @@ const LoginPage = () => {
       <footer className="bg-secondary border-t border-border py-3 px-6">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-sm text-muted-foreground">
-            © 2026 WebNexZ Foundation Fellowship Examination.
+            © 2026 Saredufy-WebNexZ Common Entrance Test.
             <span className="mx-1">|</span>
             Powered by{" "}
             <span className="font-medium text-foreground">
@@ -303,6 +343,8 @@ const LoginPage = () => {
         </div>
       </footer>
     </div>
+
+     </>
   );
 };
 

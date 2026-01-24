@@ -57,6 +57,7 @@ export interface SubjectState {
 ===================================================== */
 
 export interface ExamState {
+  liveIndicator: any;
   subjects: Record<Subject, SubjectState>;
   currentSubject: Subject;
   timeRemaining: number; // in seconds

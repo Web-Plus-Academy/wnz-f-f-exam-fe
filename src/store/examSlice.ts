@@ -30,6 +30,13 @@ const initialState: ExamState = {
   timeRemaining: EXAM_DURATION,
   isSubmitted: false,
   startTime: null,
+  // ✅ ADD THIS BLOCK
+  liveIndicator: {
+    warningCount: 0,
+    tabSwitchCount: 0,
+    faceOffCount: 0,
+    noiseDetectedCount: 0,
+  },
 };
 
 /* =====================================================
@@ -98,25 +105,72 @@ const examSlice = createSlice({
     //   }
     // },
 
+    // saveAndNext: (state) => {
+    //   const currentSub = state.currentSubject;
+    //   const subState = state.subjects[currentSub];
+    //   const questionsInSub = allQuestions[currentSub].length;
+
+    //   if (subState.currentQuestionIndex < questionsInSub - 1) {
+    //     // Just go to next question in same subject
+    //     subState.currentQuestionIndex += 1;
+    //   } else {
+    //     // Jump to next subject
+    //     const subjects = Object.keys(allQuestions);
+    //     const currentIdx = subjects.indexOf(currentSub);
+
+    //     if (currentIdx < subjects.length - 1) {
+    //       state.currentSubject = subjects[currentIdx + 1] as Subject;
+    //       state.subjects[state.currentSubject].currentQuestionIndex = 0;
+    //     }
+    //   }
+    // },
+
+
     saveAndNext: (state) => {
       const currentSub = state.currentSubject;
       const subState = state.subjects[currentSub];
-      const questionsInSub = allQuestions[currentSub].length;
+      const index = subState.currentQuestionIndex;
+      const question = subState.questions[index];
 
-      if (subState.currentQuestionIndex < questionsInSub - 1) {
-        // Just go to next question in same subject
+      // ✅ Update status before moving
+      if (question.selectedOption) {
+        question.status =
+          question.status === "marked"
+            ? "marked-answered"
+            : "answered";
+      }
+
+      const questionsInSub = subState.questions.length;
+
+      if (index < questionsInSub - 1) {
         subState.currentQuestionIndex += 1;
+
+        const nextQuestion =
+          subState.questions[subState.currentQuestionIndex];
+
+        if (nextQuestion.status === "not-visited") {
+          nextQuestion.status = "visited";
+        }
+
       } else {
-        // Jump to next subject
-        const subjects = Object.keys(allQuestions);
+        // Move to next subject
+        const subjects = Object.keys(state.subjects);
         const currentIdx = subjects.indexOf(currentSub);
 
         if (currentIdx < subjects.length - 1) {
           state.currentSubject = subjects[currentIdx + 1] as Subject;
-          state.subjects[state.currentSubject].currentQuestionIndex = 0;
+
+          const nextSubState = state.subjects[state.currentSubject];
+          nextSubState.currentQuestionIndex = 0;
+
+          const firstQuestion = nextSubState.questions[0];
+          if (firstQuestion.status === "not-visited") {
+            firstQuestion.status = "visited";
+          }
         }
       }
     },
+
 
     clearResponse: (state) => {
       const subject = state.currentSubject;
@@ -133,25 +187,67 @@ const examSlice = createSlice({
       }
     },
 
-    markForReview: (state) => {
-      const subject = state.currentSubject;
-      const subjectState = state.subjects[subject];
-      const index = subjectState.currentQuestionIndex;
-      const question = subjectState.questions[index];
+    // markForReview: (state) => {
+    //   const subject = state.currentSubject;
+    //   const subjectState = state.subjects[subject];
+    //   const index = subjectState.currentQuestionIndex;
+    //   const question = subjectState.questions[index];
 
+    //   question.status = question.selectedOption
+    //     ? "marked-answered"
+    //     : "marked";
+
+    //   if (index < subjectState.questions.length - 1) {
+    //     subjectState.currentQuestionIndex += 1;
+    //     const nextQuestion =
+    //       subjectState.questions[subjectState.currentQuestionIndex];
+    //     if (nextQuestion.status === "not-visited") {
+    //       nextQuestion.status = "visited";
+    //     }
+    //   }
+    // },
+
+    markForReview: (state) => {
+      const currentSub = state.currentSubject;
+      const subState = state.subjects[currentSub];
+      const index = subState.currentQuestionIndex;
+      const question = subState.questions[index];
+
+      // ✅ Update marked status
       question.status = question.selectedOption
         ? "marked-answered"
         : "marked";
 
-      if (index < subjectState.questions.length - 1) {
-        subjectState.currentQuestionIndex += 1;
+      if (index < subState.questions.length - 1) {
+        subState.currentQuestionIndex += 1;
+
         const nextQuestion =
-          subjectState.questions[subjectState.currentQuestionIndex];
+          subState.questions[subState.currentQuestionIndex];
+
         if (nextQuestion.status === "not-visited") {
           nextQuestion.status = "visited";
         }
+
+      } else {
+        // ✅ Jump to next subject
+        const subjects = Object.keys(state.subjects);
+        const currentIdx = subjects.indexOf(currentSub);
+
+        if (currentIdx < subjects.length - 1) {
+          const nextSubject = subjects[currentIdx + 1] as Subject;
+
+          state.currentSubject = nextSubject;
+          state.subjects[nextSubject].currentQuestionIndex = 0;
+
+          const firstQuestion = state.subjects[nextSubject].questions[0];
+
+          if (firstQuestion.status === "not-visited") {
+            firstQuestion.status = "visited";
+          }
+        }
       }
     },
+
 
     previousQuestion: (state) => {
       const currentSub = state.currentSubject;
