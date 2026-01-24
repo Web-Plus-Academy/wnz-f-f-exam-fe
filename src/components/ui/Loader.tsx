@@ -7,19 +7,26 @@ interface LoaderProps {
 const Loader: React.FC<LoaderProps> = ({ text = "Logging you in..." }) => {
   return (
     <div className="fixed inset-0 bg-white bg-opacity-95 flex flex-col items-center justify-center z-50">
-      
-      {/* Logo */}
-      <img
-        src="./public/favicon.ico"   // adjust path if needed
-        alt="Saredufy Logo"
-        className="w-20 h-20 mb-6 animate-pulse"
-      />
 
-      {/* Spinner */}
-      <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      {/* Spinner + Logo Wrapper */}
+      <div className="relative w-24 h-24 flex items-center justify-center">
+
+        {/* Rotating Ring */}
+        <div className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent animate-spin"></div>
+
+        {/* Logo */}
+        <img
+          src="/favicon.ico"   // ⚠️ In Vite/React use absolute path like this
+          alt="Saredufy Logo"
+          className="w-16 h-16 object-contain"
+        />
+
+      </div>
 
       {/* Text */}
-      <p className="mt-4 text-gray-700 font-medium">{text}</p>
+      <p className="mt-6 text-gray-700 font-medium tracking-wide">
+        {text}
+      </p>
     </div>
   );
 };
