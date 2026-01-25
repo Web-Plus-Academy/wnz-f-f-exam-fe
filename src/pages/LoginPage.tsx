@@ -81,10 +81,13 @@ const LoginPage = () => {
     setLoading(true); // 🔥 START LOADER
 
     try {
-      const responsePromise = await axios.post(`${API_URL}/api/exam-users/login`, {
-        applicationNumber: applicationNumber.trim(),
-        dob: dateOfBirth,
-      });
+      const responsePromise = await axios.post(
+        `${API_URL}/api/exam-users/login`,
+        {
+          applicationNumber: applicationNumber.trim(),
+          dob: dateOfBirth,
+        },
+      );
 
       // ⏳ 10 second delay promise
       const delayPromise = new Promise((resolve) => setTimeout(resolve, 10000));
@@ -171,7 +174,14 @@ const LoginPage = () => {
               <span className="text-sm font-semibold text-white">
                 Computer Based Test (CBT)
               </span>
-              <span className="text-sm text-white/80">January 28, 2026</span>
+              <span className="text-sm text-white/80">
+                {new Date(EXAM_START_TIME).toLocaleDateString("en-IN", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+
               <span className="text-xs text-green-400 font-medium mt-0.5">
                 AI-Proctored • Secure Examination
               </span>

@@ -14,6 +14,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/useAppDispatch";
 import { setHasReadInstructions } from "@/store/authSlice";
 import { EXAM_DURATION, TOTAL_QUESTIONS } from "@/data/questions";
 import logo from "/logo.png";
+import { EXAM_START_TIME} from "@/data/questions";
 
 const InstructionsPage = () => {
   const navigate = useNavigate();
@@ -106,7 +107,14 @@ const InstructionsPage = () => {
             <span className="text-sm font-semibold text-white">
               Computer Based Test (CBT)
             </span>
-            <span className="text-sm text-white/80">January 28, 2026</span>
+            <span className="text-sm text-white/80">
+                            {new Date(EXAM_START_TIME).toLocaleDateString("en-IN", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </span>
+            
             <span className="text-xs text-green-400 font-medium mt-0.5">
               AI-Proctored • Secure Examination
             </span>
@@ -134,7 +142,7 @@ const InstructionsPage = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Exam</p>
-                  <p className="font-semibold text-foreground">Launchpad Entrance Test</p>
+                  <p className="font-semibold text-foreground">Common Entrance Test</p>
                 </div>
               </div>
             </div>
@@ -148,12 +156,12 @@ const InstructionsPage = () => {
               />
               <OverviewCard
                 icon={<BookOpen className="h-6 w-6 text-primary" />}
-                title="4"
+                title="2"
                 subtitle="Assessment Sections"
               />
               <OverviewCard
                 icon={<Clock className="h-6 w-6 text-primary" />}
-                title={formatDuration(EXAM_DURATION)}
+                title="30 Minutes"
                 subtitle="Total Duration"
               />
             </div>

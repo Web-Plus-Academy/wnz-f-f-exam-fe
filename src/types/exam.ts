@@ -1,12 +1,10 @@
 /* =====================================================
-   SUBJECT TYPES (UPDATED)
+   SUBJECT TYPES (UPDATED FOR 2 SECTIONS)
 ===================================================== */
 
 export type Subject =
   | 'aptitude'
-  | 'programming'
-  | 'web'
-  | 'mindset';
+  | 'web';
 
 /* =====================================================
    QUESTION MODEL
@@ -53,16 +51,27 @@ export interface SubjectState {
 }
 
 /* =====================================================
-   EXAM STATE (UPDATED)
+   LIVE INDICATOR (Strongly Typed Now)
+===================================================== */
+
+export interface LiveIndicatorState {
+  warningCount: number;
+  tabSwitchCount: number;
+  faceOffCount: number;
+  noiseDetectedCount: number;
+}
+
+/* =====================================================
+   EXAM STATE
 ===================================================== */
 
 export interface ExamState {
-  liveIndicator: any;
   subjects: Record<Subject, SubjectState>;
   currentSubject: Subject;
-  timeRemaining: number; // in seconds
+  timeRemaining: number;
   isSubmitted: boolean;
   startTime: number | null;
+  liveIndicator: LiveIndicatorState;
 }
 
 /* =====================================================

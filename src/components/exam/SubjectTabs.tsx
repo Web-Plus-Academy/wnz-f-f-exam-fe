@@ -1,34 +1,32 @@
 import { Subject } from "@/types/exam";
+import { allQuestions } from "@/data/questions";
 
 interface SubjectTabsProps {
   currentSubject: Subject;
   onSubjectChange: (subject: Subject) => void;
 }
 
-const subjects: { key: Subject; label: string }[] = [
-  { key: "aptitude", label: "Aptitude" },
-  { key: "programming", label: "Programming" },
-  { key: "web", label: "Web Basics" },
-  { key: "mindset", label: "Mindset" },
-];
-
 export const SubjectTabs = ({
   currentSubject,
   onSubjectChange,
 }: SubjectTabsProps) => {
+  const subjects = Object.keys(allQuestions) as Subject[];
+
   return (
     <div className="flex bg-panel-bg border-b border-panel-border overflow-x-auto">
       {subjects.map((subject) => (
         <button
-          key={subject.key}
-          onClick={() => onSubjectChange(subject.key)}
+          key={subject}
+          onClick={() => onSubjectChange(subject)}
           className={`subject-tab ${
-            currentSubject === subject.key
+            currentSubject === subject
               ? "subject-tab-active"
               : "subject-tab-inactive"
           }`}
         >
-          {subject.label}
+          {subject === "aptitude"
+            ? "General Aptitude"
+            : "Web Fundamentals"}
         </button>
       ))}
     </div>

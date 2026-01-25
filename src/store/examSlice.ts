@@ -16,21 +16,18 @@ const initializeSubjectState = (subject: Subject) => ({
 });
 
 /* =====================================================
-   Initial State (UPDATED)
+   Initial State (UPDATED FOR 2 SECTIONS)
 ===================================================== */
 
 const initialState: ExamState = {
   subjects: {
     aptitude: initializeSubjectState("aptitude"),
-    programming: initializeSubjectState("programming"),
     web: initializeSubjectState("web"),
-    mindset: initializeSubjectState("mindset"),
   },
   currentSubject: "aptitude",
   timeRemaining: EXAM_DURATION,
   isSubmitted: false,
   startTime: null,
-  // ✅ ADD THIS BLOCK
   liveIndicator: {
     warningCount: 0,
     tabSwitchCount: 0,
@@ -49,12 +46,12 @@ const examSlice = createSlice({
   reducers: {
     startExam: (state) => {
       state.startTime = Date.now();
-      // mark first question as visited
       state.subjects[state.currentSubject].questions[0].status = "visited";
     },
 
     setCurrentSubject: (state, action: PayloadAction<Subject>) => {
       state.currentSubject = action.payload;
+
       const subjectState = state.subjects[action.payload];
       const index = subjectState.currentQuestionIndex;
       const question = subjectState.questions[index];
@@ -66,9 +63,11 @@ const examSlice = createSlice({
 
     setCurrentQuestion: (state, action: PayloadAction<number>) => {
       const subject = state.currentSubject;
-      state.subjects[subject].currentQuestionIndex = action.payload;
+      const subjectState = state.subjects[subject];
 
-      const question = state.subjects[subject].questions[action.payload];
+      subjectState.currentQuestionIndex = action.payload;
+
+      const question = subjectState.questions[action.payload];
       if (question.status === "not-visited") {
         question.status = "visited";
       }
@@ -80,51 +79,10 @@ const examSlice = createSlice({
     ) => {
       const subject = state.currentSubject;
       const index = state.subjects[subject].currentQuestionIndex;
+
       state.subjects[subject].questions[index].selectedOption =
         action.payload.option;
     },
-
-    // saveAndNext: (state) => {
-    //   const subject = state.currentSubject;
-    //   const subjectState = state.subjects[subject];
-    //   const index = subjectState.currentQuestionIndex;
-    //   const question = subjectState.questions[index];
-
-    //   if (question.selectedOption) {
-    //     question.status =
-    //       question.status === "marked" ? "marked-answered" : "answered";
-    //   }
-
-    //   if (index < subjectState.questions.length - 1) {
-    //     subjectState.currentQuestionIndex += 1;
-    //     const nextQuestion =
-    //       subjectState.questions[subjectState.currentQuestionIndex];
-    //     if (nextQuestion.status === "not-visited") {
-    //       nextQuestion.status = "visited";
-    //     }
-    //   }
-    // },
-
-    // saveAndNext: (state) => {
-    //   const currentSub = state.currentSubject;
-    //   const subState = state.subjects[currentSub];
-    //   const questionsInSub = allQuestions[currentSub].length;
-
-    //   if (subState.currentQuestionIndex < questionsInSub - 1) {
-    //     // Just go to next question in same subject
-    //     subState.currentQuestionIndex += 1;
-    //   } else {
-    //     // Jump to next subject
-    //     const subjects = Object.keys(allQuestions);
-    //     const currentIdx = subjects.indexOf(currentSub);
-
-    //     if (currentIdx < subjects.length - 1) {
-    //       state.currentSubject = subjects[currentIdx + 1] as Subject;
-    //       state.subjects[state.currentSubject].currentQuestionIndex = 0;
-    //     }
-    //   }
-    // },
-
 
     saveAndNext: (state) => {
       const currentSub = state.currentSubject;
@@ -132,7 +90,7 @@ const examSlice = createSlice({
       const index = subState.currentQuestionIndex;
       const question = subState.questions[index];
 
-      // ✅ Update status before moving
+      // Update status
       if (question.selectedOption) {
         question.status =
           question.status === "marked"
@@ -140,9 +98,7 @@ const examSlice = createSlice({
             : "answered";
       }
 
-      const questionsInSub = subState.questions.length;
-
-      if (index < questionsInSub - 1) {
+      if (index < subState.questions.length - 1) {
         subState.currentQuestionIndex += 1;
 
         const nextQuestion =
@@ -154,23 +110,24 @@ const examSlice = createSlice({
 
       } else {
         // Move to next subject
-        const subjects = Object.keys(state.subjects);
+        const subjects = Object.keys(state.subjects) as Subject[];
         const currentIdx = subjects.indexOf(currentSub);
 
         if (currentIdx < subjects.length - 1) {
-          state.currentSubject = subjects[currentIdx + 1] as Subject;
+          const nextSubject = subjects[currentIdx + 1];
 
-          const nextSubState = state.subjects[state.currentSubject];
-          nextSubState.currentQuestionIndex = 0;
+          state.currentSubject = nextSubject;
+          state.subjects[nextSubject].currentQuestionIndex = 0;
 
-          const firstQuestion = nextSubState.questions[0];
+          const firstQuestion =
+            state.subjects[nextSubject].questions[0];
+
           if (firstQuestion.status === "not-visited") {
             firstQuestion.status = "visited";
           }
         }
       }
     },
-
 
     clearResponse: (state) => {
       const subject = state.currentSubject;
@@ -187,33 +144,12 @@ const examSlice = createSlice({
       }
     },
 
-    // markForReview: (state) => {
-    //   const subject = state.currentSubject;
-    //   const subjectState = state.subjects[subject];
-    //   const index = subjectState.currentQuestionIndex;
-    //   const question = subjectState.questions[index];
-
-    //   question.status = question.selectedOption
-    //     ? "marked-answered"
-    //     : "marked";
-
-    //   if (index < subjectState.questions.length - 1) {
-    //     subjectState.currentQuestionIndex += 1;
-    //     const nextQuestion =
-    //       subjectState.questions[subjectState.currentQuestionIndex];
-    //     if (nextQuestion.status === "not-visited") {
-    //       nextQuestion.status = "visited";
-    //     }
-    //   }
-    // },
-
     markForReview: (state) => {
       const currentSub = state.currentSubject;
       const subState = state.subjects[currentSub];
       const index = subState.currentQuestionIndex;
       const question = subState.questions[index];
 
-      // ✅ Update marked status
       question.status = question.selectedOption
         ? "marked-answered"
         : "marked";
@@ -229,17 +165,17 @@ const examSlice = createSlice({
         }
 
       } else {
-        // ✅ Jump to next subject
-        const subjects = Object.keys(state.subjects);
+        const subjects = Object.keys(state.subjects) as Subject[];
         const currentIdx = subjects.indexOf(currentSub);
 
         if (currentIdx < subjects.length - 1) {
-          const nextSubject = subjects[currentIdx + 1] as Subject;
+          const nextSubject = subjects[currentIdx + 1];
 
           state.currentSubject = nextSubject;
           state.subjects[nextSubject].currentQuestionIndex = 0;
 
-          const firstQuestion = state.subjects[nextSubject].questions[0];
+          const firstQuestion =
+            state.subjects[nextSubject].questions[0];
 
           if (firstQuestion.status === "not-visited") {
             firstQuestion.status = "visited";
@@ -248,26 +184,22 @@ const examSlice = createSlice({
       }
     },
 
-
     previousQuestion: (state) => {
       const currentSub = state.currentSubject;
       const subState = state.subjects[currentSub];
 
       if (subState.currentQuestionIndex > 0) {
-        // 1. Move to previous question in the current subject
         subState.currentQuestionIndex -= 1;
       } else {
-        // 2. We are at index 0, find the previous subject in order
-        const subjectsOrder: Subject[] = ["aptitude", "programming", "web", "mindset"];
-        const currentSubIdx = subjectsOrder.indexOf(currentSub);
+        const subjects = Object.keys(state.subjects) as Subject[];
+        const currentIdx = subjects.indexOf(currentSub);
 
-        if (currentSubIdx > 0) {
-          const prevSubject = subjectsOrder[currentSubIdx - 1];
+        if (currentIdx > 0) {
+          const prevSubject = subjects[currentIdx - 1];
           state.currentSubject = prevSubject;
 
-          // 3. Set index to the LAST question of that previous subject
-          // allQuestions[prevSubject].length - 1 ensures we land at the end of the previous list
-          state.subjects[prevSubject].currentQuestionIndex = allQuestions[prevSubject].length - 1;
+          state.subjects[prevSubject].currentQuestionIndex =
+            state.subjects[prevSubject].questions.length - 1;
         }
       }
     },
@@ -284,15 +216,11 @@ const examSlice = createSlice({
       ...initialState,
       subjects: {
         aptitude: initializeSubjectState("aptitude"),
-        programming: initializeSubjectState("programming"),
         web: initializeSubjectState("web"),
-        mindset: initializeSubjectState("mindset"),
       },
     }),
   },
 });
-
-
 
 /* =====================================================
    Exports

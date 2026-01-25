@@ -35,8 +35,9 @@ const ExamPage = () => {
   const dispatch = useAppDispatch();
 
   const { isAuthenticated, hasReadInstructions, user } = useAppSelector(
-    (state) => state.auth,
+    (state) => state.auth
   );
+
   const proctoringState = useAppSelector((state) => state.proctoring);
   const { setupCompleted, isAutoSubmitted } = proctoringState;
 
@@ -77,7 +78,9 @@ const ExamPage = () => {
         toast.error("Proctoring Hardware Error");
       }
     };
+
     if (setupCompleted) initProctoring();
+
     return () => {
       cameraStream?.getTracks().forEach((t) => t.stop());
       micStream?.getTracks().forEach((t) => t.stop());
@@ -107,19 +110,23 @@ const ExamPage = () => {
     let marked = 0;
     let notVisited = 0;
 
-    Object.keys(allQuestions).forEach((subject) => {
+    const subjects = Object.keys(allQuestions);
+
+    subjects.forEach((subject) => {
       const subjectQuestions = allQuestions[subject];
       const subjectState = examState.subjects[subject];
 
       subjectQuestions.forEach((question, index) => {
         const qState = subjectState.questions[index];
 
-        if (qState.status.includes("notVisited")) {
+        if (qState.status === "not-visited") {
           notVisited++;
           return;
         }
 
-        if (qState.status.includes("marked")) marked++;
+        if (qState.status === "marked" || qState.status === "marked-answered") {
+          marked++;
+        }
 
         if (qState.selectedOption) {
           answered++;
@@ -161,16 +168,16 @@ const ExamPage = () => {
               noiseDetectedCount: proctoringState.noiseDetectedCount,
             },
             finalMarks,
-            terminated: isTerminated, // ✅ send termination flag
+            terminated: isTerminated,
           }),
-        },
+        }
       );
 
       dispatch(submitExam());
       navigate("/summary");
     } catch (error: any) {
       console.error("Submission Error:", error);
-      toast.error(error.message || "Submission failed. Please try again.");
+      toast.error(error.message || "Submission failed.");
     }
   };
 
@@ -190,10 +197,14 @@ const ExamPage = () => {
 
   const isFirstQuestionInSubject = currentQuestionIndex === 0;
   const isLastQuestionInSubject =
-    currentQuestionIndex === allQuestions[currentSubject].length - 1;
+    currentQuestionIndex ===
+    allQuestions[currentSubject].length - 1;
 
-  const isFirstQuestionGlobal = isFirstSubject && isFirstQuestionInSubject;
-  const isLastQuestionGlobal = isLastSubject && isLastQuestionInSubject;
+  const isFirstQuestionGlobal =
+    isFirstSubject && isFirstQuestionInSubject;
+
+  const isLastQuestionGlobal =
+    isLastSubject && isLastQuestionInSubject;
 
   /* ================= UI ================= */
 
@@ -216,7 +227,9 @@ const ExamPage = () => {
             <QuestionPanel
               question={currentQuestion}
               selectedOption={currentQuestionState.selectedOption}
-              onSelectOption={(option) => dispatch(selectOption({ option }))}
+              onSelectOption={(option) =>
+                dispatch(selectOption({ option }))
+              }
             />
           </div>
 
@@ -235,7 +248,9 @@ const ExamPage = () => {
           <QuestionGrid
             questions={currentSubjectState.questions}
             currentQuestionIndex={currentQuestionIndex}
-            onQuestionSelect={(i) => dispatch(setCurrentQuestion(i))}
+            onQuestionSelect={(i) =>
+              dispatch(setCurrentQuestion(i))
+            }
             candidateName={user?.name || "Candidate"}
             subject={currentSubject}
           />
@@ -245,9 +260,7 @@ const ExamPage = () => {
       <SubmitModal
         isOpen={showSubmitModal}
         onClose={() => setShowSubmitModal(false)}
-        onConfirm={() => {
-          handleFinalSubmit();
-        }}
+        onConfirm={() => handleFinalSubmit()}
         stats={evaluateExam().stats}
       />
 
