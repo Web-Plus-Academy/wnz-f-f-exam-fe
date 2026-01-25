@@ -38,11 +38,8 @@ const ExamPage = () => {
     (state) => state.auth,
   );
   const proctoringState = useAppSelector((state) => state.proctoring);
-  // const { setupCompleted, isAutoSubmitted } = proctoringState;
+  const { setupCompleted, isAutoSubmitted } = proctoringState;
 
-  const { setupCompleted, isAutoSubmitted } = useAppSelector(
-    (state) => state.proctoring,
-  );
   const examState = useAppSelector((state) => state.exam);
   const { formattedTime, timeRemaining, isSubmitted } = useExamTimer();
 
@@ -53,7 +50,6 @@ const ExamPage = () => {
   /* ================= AUTO SUBMIT ================= */
   useEffect(() => {
     if (isAutoSubmitted) {
-      
       handleFinalSubmit(true);
     }
   }, [isAutoSubmitted]);
@@ -165,15 +161,16 @@ const ExamPage = () => {
               noiseDetectedCount: proctoringState.noiseDetectedCount,
             },
             finalMarks,
-            terminated: isTerminated,   // ✅ send termination flag
+            terminated: isTerminated, // ✅ send termination flag
           }),
         },
       );
 
       dispatch(submitExam());
       navigate("/summary");
-    } catch {
-      toast.error("Submission failed. Please try again.");
+    } catch (error: any) {
+      console.error("Submission Error:", error);
+      toast.error(error.message || "Submission failed. Please try again.");
     }
   };
 
@@ -248,7 +245,9 @@ const ExamPage = () => {
       <SubmitModal
         isOpen={showSubmitModal}
         onClose={() => setShowSubmitModal(false)}
-        onConfirm={handleFinalSubmit}
+        onConfirm={() => {
+          handleFinalSubmit();
+        }}
         stats={evaluateExam().stats}
       />
 
