@@ -46,7 +46,7 @@ const InstructionsPage = () => {
   ===================================================== */
 
   const instructions = [
-    "This is an AI-proctored Computer Based Test (CBT) for the WebNexZ Foundation Fellowship.",
+    "This is an AI-proctored Computer Based Test (CBT) for the Launchpad & Fellowship.",
     "The examination evaluates logical thinking, programming fundamentals, web technology awareness, and learning mindset.",
     "All questions are compulsory and are of multiple-choice (MCQ) type. There is no negative marking.",
     "The webcam and microphone must remain enabled for the entire duration of the examination.",
