@@ -9,6 +9,7 @@ import Loader from "@/components/ui/Loader";
 // import { userData } from "@/data/userdata";
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
+import logo from "/logo.png";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -143,7 +144,7 @@ const LoginPage = () => {
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 flex items-center justify-center shadow-md">
                 <img
-                  src="./public/favicon.ico"
+                  src={logo}
                   alt="WebNexZ Foundation"
                   className="w-20 h-20 object-contain"
                 />

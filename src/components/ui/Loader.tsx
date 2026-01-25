@@ -1,4 +1,5 @@
 import React from "react";
+import logo from "/logo.png";
 
 interface LoaderProps {
   text?: string;
@@ -16,7 +17,7 @@ const Loader: React.FC<LoaderProps> = ({ text = "Logging you in..." }) => {
 
         {/* Logo */}
         <img
-          src="/favicon.ico"   // ⚠️ In Vite/React use absolute path like this
+          src={logo}  // ⚠️ In Vite/React use absolute path like this
           alt="Saredufy Logo"
           className="w-16 h-16 object-contain"
         />

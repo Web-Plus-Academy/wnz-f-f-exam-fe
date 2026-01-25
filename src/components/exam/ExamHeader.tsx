@@ -5,6 +5,7 @@ interface ExamHeaderProps {
   formattedTime: string;
   isTimeLow: boolean;
 }
+import logo from "/logo.png";
 
 export const ExamHeader = ({ examName, formattedTime, isTimeLow }: ExamHeaderProps) => {
   return (
@@ -14,7 +15,7 @@ export const ExamHeader = ({ examName, formattedTime, isTimeLow }: ExamHeaderPro
           <div className="w-20 h-20  flex items-center justify-center">
             <span className="text-primary font-bold text-xl">
               <img
-                src="./public/favicon.ico"
+                src={logo}
                 alt="SWCET"
                 className="w-20 h-20 object-contain"
               />

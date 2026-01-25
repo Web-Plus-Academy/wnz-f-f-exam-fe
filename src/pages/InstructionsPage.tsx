@@ -13,6 +13,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/hooks/useAppDispatch";
 import { setHasReadInstructions } from "@/store/authSlice";
 import { EXAM_DURATION, TOTAL_QUESTIONS } from "@/data/questions";
+import logo from "/logo.png";
 
 const InstructionsPage = () => {
   const navigate = useNavigate();
@@ -78,8 +79,8 @@ const InstructionsPage = () => {
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 flex items-center justify-center shadow-md">
               <img
-                src="./public/favicon.ico"
-                alt="WebNexZ Foundation"
+                src={logo}
+                alt="SW-CET"
                 className="w-20 h-20 object-contain"
               />
             </div>
