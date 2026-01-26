@@ -46,19 +46,22 @@ const InstructionsPage = () => {
   ===================================================== */
 
   const instructions = [
-    "This is an AI-proctored Computer Based Test (CBT) for the Launchpad & Fellowship.",
-    "The examination evaluates logical thinking, programming fundamentals, web technology awareness, and learning mindset.",
-    "All questions are compulsory and are of multiple-choice (MCQ) type. There is no negative marking.",
-    "The webcam and microphone must remain enabled for the entire duration of the examination.",
-    "AI-based systems continuously monitor face presence, audio levels, and suspicious activity.",
-    "The examination will AUTO-SUBMIT immediately if the following violation limits are reached:",
-    "• 5 Tab Switches / Window Minimized actions.",
-    "• 5 Instances of 'Face Not Detected' or 'Multiple Faces Detected'.",
-    "• 10 High Noise detections (Microphone monitoring).",
-    "• 20 Total cumulative warnings of any nature.",
-    "Any attempt to manipulate or interfere with the proctoring system results in immediate disqualification.",
-    "The exam timer is server-controlled and will auto-submit responses when the time reaches zero.",
-  ];
+  "This is an AI-proctored Computer Based Test (CBT) for the SW-CET Screening (Launchpad & Fellowship Intake).",
+  "The examination consists of TWO sections: General Aptitude (25 Questions) and Web Fundamentals (25 Questions).",
+  "Total Questions: 50 | Duration: 30 Minutes | Total Marks: 200.",
+  "Marking Scheme: +4 marks for each correct answer and -1 mark for each incorrect answer.",
+  "All questions are compulsory and are of multiple-choice (MCQ) type.",
+  "The webcam and microphone must remain enabled for the entire duration of the examination.",
+  "AI-based systems continuously monitor face presence, audio levels, and suspicious activity.",
+  "The examination will AUTO-SUBMIT immediately if the following violation limits are reached:",
+  "• 5 Tab Switches / Window Minimized actions.",
+  "• 5 Instances of 'Face Not Detected' or 'Multiple Faces Detected'.",
+  "• 10 High Noise detections (Microphone monitoring).",
+  "• 20 Total cumulative warnings of any nature.",
+  "Any attempt to manipulate or interfere with the proctoring system will result in immediate disqualification.",
+  "The exam timer is server-controlled and responses will auto-submit when the time reaches zero.",
+];
+
 
   const legendItems = [
     { color: "bg-question-not-visited", label: "Not Visited" },
