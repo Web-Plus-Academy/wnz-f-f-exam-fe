@@ -577,8 +577,8 @@ export const EXAM_DURATION = 30 * 60; // 30 minutes
 // export const TOTAL_QUESTIONS = 16;
 // export const EXAM_DURATION = 30 * 60; // 30 minutes
 
-export const EXAM_START_TIME = new Date('2026-01-28T20:00:00+05:30').getTime();
-export const EXAM_END_TIME   = new Date('2026-01-28T21:00:00+05:30').getTime();
+export const EXAM_START_TIME = new Date('2026-02-25T20:00:00+05:30').getTime();
+export const EXAM_END_TIME   = new Date('2026-02-25T21:00:00+05:30').getTime();
 
 // export const EXAM_END_TIME   = new Date('2026-01-25T23:00:00+05:30').getTime();
 // export const EXAM_END_TIME   = new Date('2026-01-28T21:00:00+05:30').getTime();
